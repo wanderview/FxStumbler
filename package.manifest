@@ -1,0 +1,32 @@
+{
+  "name": "FxStumbler",
+  "package_path" : "http://clochix.net/public/stumbler/stumbler.zip",
+  "description": "Client for Mozilla Location Service",
+  "type": "certified",
+  "version": "0.1",
+  "launch_path": "/index.html",
+  "developer": {
+    "name": "Clochix",
+    "url": "https://github.com/clochix/fxstumbler"
+  },
+  "permissions": {
+    "geolocation": {
+      "description": "Geo Location"
+    },
+    "mobileconnection":{
+      "description": "Access to GSM datas"
+    },
+    "systemXHR":{
+      "description": "Send datas"
+    },
+    "wifi-manage":{
+      "description": "Access to wifi data"
+    }
+  },
+  "default_locale": "en-US",
+  "icons": {
+    "30": "/style/icons/icon-30.png",
+    "60": "/style/icons/icon-60.png",
+    "128": "/style/icons/icon-128.png"
+    }
+}
