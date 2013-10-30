@@ -21,7 +21,8 @@ function log(message) {
 // send {{
 function send() {
   "use strict";
-  var xhr, res, options;
+  var xhr, res, options, username;
+  username = document.querySelector("[name=username]").value.replace(/^\s+/g, '').replace(/\s+$/g, '');
   options = {
     mozAnon: true,
     mozSystem: true
@@ -30,8 +31,12 @@ function send() {
   log(items);
   try {
     xhr = new XMLHttpRequest(options);
-    xhr.open("POST", "https://location.services.mozilla.com/v1/submit", false);
+    //xhr.open("POST", "https://location.services.mozilla.com/v1/submit", false);
+    xhr.open("POST", "http://clochix.net", false);
     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    if (username !== '') {
+      xhr.setRequestHeader("X-Nickname", username);
+    }
     xhr.send(JSON.stringify({items: items}));
     if (xhr.status === 204) {
       log("[Send] OK");
