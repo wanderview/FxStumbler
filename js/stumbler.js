@@ -59,13 +59,25 @@ function send() {
 // Cell {{
 function getCellInfos() {
   "use strict";
-  var conn, data, voice, cell = {};
+  var conn, data, voice, cell = {}, type, tr;
   log("[cell] Getting cell infos");
+  // Convert radio type
+  tr = {
+    'gsm': ["gsm", "edge", "gprs", "hspa", "hsdpa", "hspa+", "hsupa"],
+    'cdma': ["cdma", "evdo", "ehrpd"]
+  };
+
   try {
     conn  = window.navigator.mozMobileConnection;
     data  = conn.data;
     voice = conn.voice;
-    cell.radio  = voice.type;
+    type  = voice.type;
+    Object.keys(tr).forEach(function (radio) {
+      if (tr[radio].indexOf(type) !== -1) {
+        type = radio;
+      }
+    });
+    cell.radio  = type;
     cell.mcc    = voice.network.mcc;
     cell.mnc    = voice.network.mnc;
     cell.lac    = voice.cell.gsmLocationAreaCode;
