@@ -131,22 +131,30 @@ function getWifiInfos(cb) {
 }
 function onWifiInfos(networks) {
   "use strict";
-  item.wifi = networks;
-  item.cell = [ getCellInfos() ];
-  items.push(item);
-  send(items);
+  try {
+    item.wifi = networks;
+    item.cell = [ getCellInfos() ];
+    items.push(item);
+    send(items);
+  } catch (e) {
+    log("[wifi] Error onWifiInfos: " + e);
+  }
 }
 // }}
 // Geoloc {{
 function onGeolocSuccess(pos) {
   "use strict";
-  item = {};
-  item.lat      = pos.coords.latitude;
-  item.lon      = pos.coords.longitude;
-  item.accuracy = pos.coords.accuracy;
-  log("[geoloc] Done: " + item.lat + '/' + item.lon + '/' + item.accuracy);
+  try {
+    item = {};
+    item.lat      = pos.coords.latitude;
+    item.lon      = pos.coords.longitude;
+    item.accuracy = pos.coords.accuracy;
+    log("[geoloc] Done: " + item.lat + '/' + item.lon + '/' + item.accuracy);
 
-  getWifiInfos(onWifiInfos);
+    getWifiInfos(onWifiInfos);
+  } catch (e) {
+    log("[geoloc] Error in onGeolocSuccess: " + pos);
+  }
 }
 function onGeolocError(err) {
   "use strict";
@@ -166,9 +174,12 @@ function getMobileInfos() {
     var activity = new window.MozActivity({
       name: "clochix.geoloc"
     });
-    activity.onsuccess = onGeolocSuccess;
+    activity.onsuccess = function () {
+      onGeolocSuccess(this.result);
+    };
     activity.onerror = function () {
-      window.alert("Error getting location:" + this.error);
+      log('[geoloc] Error getting location: ' + this.error.name);
+      log('[geoloc] Aborting.');
     };
   }
 
@@ -176,36 +187,48 @@ function getMobileInfos() {
 }
 function onVoiceChange() {
   "use strict";
-  var conn = window.navigator.mozMobileConnection;
-  if (conn && conn.voice) {
-    if (curCell !== conn.voice.cell.gsmCellId) {
-      curCell = conn.voice.cell.gsmCellId;
-      log("[cell] New cell: " + curCell);
-      getMobileInfos();
+  try {
+    var conn = window.navigator.mozMobileConnection;
+    if (conn && conn.voice) {
+      if (curCell !== conn.voice.cell.gsmCellId) {
+        curCell = conn.voice.cell.gsmCellId;
+        log("[cell] New cell: " + curCell);
+        getMobileInfos();
+      }
     }
+  } catch (e) {
+    log("Error in onVoiceChange: " + e);
   }
 }
 function onPosChange(pos) {
   "use strict";
-  if (curPos.latitude !== pos.coords.latitude || curPos.longitude !== pos.coords.longitude || curPos.accuracy !== pos.coords.accuracy) {
-    log("[geoloc] New position:" + pos.coords.latitude + "/" + pos.coords.longitude + "/" + pos.coords.accuracy);
-    curPos.latitude  = pos.coords.latitude;
-    curPos.longitude = pos.coords.longitude;
-    curPos.accuracy  = pos.coords.accuracy;
-    onGeolocSuccess(pos);
+  try {
+    if (curPos.latitude !== pos.coords.latitude || curPos.longitude !== pos.coords.longitude || curPos.accuracy !== pos.coords.accuracy) {
+      log("[geoloc] New position:" + pos.coords.latitude + "/" + pos.coords.longitude + "/" + pos.coords.accuracy);
+      curPos.latitude  = pos.coords.latitude;
+      curPos.longitude = pos.coords.longitude;
+      curPos.accuracy  = pos.coords.accuracy;
+      onGeolocSuccess(pos);
+    }
+  } catch (e) {
+    log("Error in onPosChange: " + e);
   }
 }
 function startMonitoring() {
   "use strict";
-  if (document.querySelector('[name=geoloc]:checked').value !== 'GPS') {
-    window.alert("Monitoring is only available when using GPS");
-    return false;
+  try {
+    if (document.querySelector('[name=geoloc]:checked').value !== 'GPS') {
+      window.alert("Monitoring is only available when using GPS");
+      return false;
+    }
+    var conn = window.navigator.mozMobileConnection;
+    if (conn && conn.voice) {
+      conn.addEventListener('voicechange', onVoiceChange);
+    }
+    watchId = navigator.geolocation.watchPosition(onPosChange, onGeolocError, geoOptions);
+  } catch (e) {
+    log("Error in startMonitoring: " + e);
   }
-  var conn = window.navigator.mozMobileConnection;
-  if (conn && conn.voice) {
-    conn.addEventListener('voicechange', onVoiceChange);
-  }
-  watchId = navigator.geolocation.watchPosition(onPosChange, onGeolocError, geoOptions);
 }
 function stopMonitoring() {
   "use strict";
