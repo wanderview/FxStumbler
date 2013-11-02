@@ -17,3 +17,6 @@ To create the package, use
 
     rm stumbler.zip && zip -r stumbler.zip index.html js locales manifest.webapp style
 
+## Troubleshooting GeoLocation
+
+On my Keon, geolocation seems very inaccurate. So I added the ability to select current location on a card with a custom Web Activity. To use it, you need to install another application which implements `clochix.geoloc` Web Activity (see my [hereIam](https://github.com/clochix/hereIam) application) and check the "Ask" radio button. In this mode, monitoring of position changes is currently disabled;

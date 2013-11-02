@@ -31,8 +31,7 @@ function send() {
   log(items);
   try {
     xhr = new XMLHttpRequest(options);
-    //xhr.open("POST", "https://location.services.mozilla.com/v1/submit", false);
-    xhr.open("POST", "http://clochix.net", false);
+    xhr.open("POST", "https://location.services.mozilla.com/v1/submit", false);
     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     if (username !== '') {
       xhr.setRequestHeader("X-Nickname", username);
@@ -141,11 +140,11 @@ function onWifiInfos(networks) {
 // Geoloc {{
 function onGeolocSuccess(pos) {
   "use strict";
-  log("[geoloc] Done");
   item = {};
   item.lat      = pos.coords.latitude;
   item.lon      = pos.coords.longitude;
   item.accuracy = pos.coords.accuracy;
+  log("[geoloc] Done: " + item.lat + '/' + item.lon + '/' + item.accuracy);
 
   getWifiInfos(onWifiInfos);
 }
@@ -160,7 +159,18 @@ function getMobileInfos() {
   "use strict";
 
   log("Getting infos");
-  navigator.geolocation.getCurrentPosition(onGeolocSuccess, onGeolocError, geoOptions);
+
+  if (document.querySelector('[name=geoloc]:checked').value === 'GPS') {
+    navigator.geolocation.getCurrentPosition(onGeolocSuccess, onGeolocError, geoOptions);
+  } else {
+    var activity = new window.MozActivity({
+      name: "clochix.geoloc"
+    });
+    activity.onsuccess = onGeolocSuccess;
+    activity.onerror = function () {
+      window.alert("Error getting location:" + this.error);
+    };
+  }
 
   return false;
 }
@@ -187,6 +197,10 @@ function onPosChange(pos) {
 }
 function startMonitoring() {
   "use strict";
+  if (document.querySelector('[name=geoloc]:checked').value !== 'GPS') {
+    window.alert("Monitoring is only available when using GPS");
+    return false;
+  }
   var conn = window.navigator.mozMobileConnection;
   if (conn && conn.voice) {
     conn.addEventListener('voicechange', onVoiceChange);
