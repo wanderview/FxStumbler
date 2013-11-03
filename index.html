@@ -5,19 +5,32 @@
     <meta http-equiv="pragma" content="no-cache"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FxStumbler</title>
-    <script type="text/javascript" src="js/stumbler.js"></script>
+    <script defer src="js/stumbler.js"></script>
+    <script defer src="lib/localForage/lib/async_storage.js"></script>
+    <link rel='stylesheet' href='style/stumbler.css' type='text/css' />
   </head>
   <body class="">
     <h1>Push location Infos</h1>
     <p>
       <button id="mobile">Push infos</button>
       <button id="monitor" data-state="stopped">Start monitoring</button>
-      <button id="clear">Clear logs</button>
+      <button id="clearLogs">Clear logs</button>
+    </p>
+    <p>
+      <button id="displayStorage">Display Storage</button>
+      <button id="sendStorage">Send Storage</button>
+      <button id="clearStorage">Clear Storage</button>
     </p>
     <p>
       Geoloc:
       <label><input type="radio" name="geoloc" value="GPS" checked/>GPS</label>
       <label><input type="radio" name="geoloc" value="Ask" />Ask</label>
+    </p>
+    <p>
+      Action:
+      <label><input type="radio" name="action" value="send" checked/>Send</label>
+      <label><input type="radio" name="action" value="store" />Store</label>
+      <label><input type="radio" name="action" value="nothing" />Nothing</label>
     </p>
     <p>
       <label for="username">Username: <input type="text" name="username" /></label>

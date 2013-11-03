@@ -1,4 +1,5 @@
 //jshint browser: true
+/*global asyncStorage: true */
 var result,
     watchId,
     items = [],
@@ -19,7 +20,8 @@ function log(message) {
   result.textContent += '[' + new Date().toISOString().substr(11, 8) + ']' + message + "\n";
 }
 // send {{
-function send() {
+function send(cb) {
+  //jshint maxstatements: 30
   "use strict";
   var xhr, res, options, username;
   username = document.querySelector("[name=username]").value.replace(/^\s+/g, '').replace(/\s+$/g, '');
@@ -40,6 +42,9 @@ function send() {
     if (xhr.status === 204) {
       log("[Send] OK");
       items = [];
+      if (cb) {
+        cb();
+      }
     } else {
       log("[Send] K0");
       try {
@@ -55,6 +60,41 @@ function send() {
   }
 }
 // }}
+function onInfosCollected() {
+  "use strict";
+  try {
+    switch (document.querySelector('[name=action]:checked').value) {
+    case 'send':
+      send();
+      break;
+    case 'store':
+      asyncStorage.getItem('items', function (value) {
+        if (value === null) {
+          value = items;
+        } else {
+          try {
+            value = JSON.parse(value);
+          } catch (e) {
+            log("Error retrieving stored items: " + e);
+            value = [];
+          }
+          value = value.concat(items);
+        }
+        asyncStorage.setItem('items', JSON.stringify(value), function () {
+          log("Done adding " + items.length + " items. " + value.length + " items stored");
+          items = [];
+        });
+      });
+      break;
+    case 'nothing':
+      log("Done");
+      log(items);
+      break;
+    }
+  } catch (e) {
+    log("Error in onInfosCollected: " + e);
+  }
+}
 // Cell {{
 function getCellInfos() {
   "use strict";
@@ -135,7 +175,7 @@ function onWifiInfos(networks) {
     item.wifi = networks;
     item.cell = [ getCellInfos() ];
     items.push(item);
-    send(items);
+    onInfosCollected();
   } catch (e) {
     log("[wifi] Error onWifiInfos: " + e);
   }
@@ -240,21 +280,94 @@ function stopMonitoring() {
 }
 window.addEventListener("load", function () {
   "use strict";
-  result = document.getElementById("result");
-  document.getElementById('mobile').addEventListener('click', getMobileInfos);
-  document.getElementById('monitor').addEventListener('click', function () {
-    if (this.dataset.state === 'stopped') {
-      startMonitoring();
-      this.dataset.state = "started";
-      this.textContent   = "Stop monitoring";
-    } else {
-      stopMonitoring();
-      this.dataset.state = "stopped";
-      this.textContent   = "Start monitoring";
-    }
-  });
-  document.getElementById('clear').addEventListener('click', function () {
-    result.textContent = '';
-  });
+  try {
+    result = document.getElementById("result");
+    document.getElementById('mobile').addEventListener('click', getMobileInfos);
+    document.getElementById('monitor').addEventListener('click', function () {
+      if (this.dataset.state === 'stopped') {
+        startMonitoring();
+        this.dataset.state = "started";
+        this.textContent   = "Stop monitoring";
+      } else {
+        stopMonitoring();
+        this.dataset.state = "stopped";
+        this.textContent   = "Start monitoring";
+      }
+    });
+    document.getElementById('clearLogs').addEventListener('click', function (event) {
+      event.preventDefault();
+      try {
+        result.textContent = '';
+      } catch (e) {
+        log("Error in clearLogs: " + e);
+      }
+      return false;
+    });
+    document.getElementById('displayStorage').addEventListener('click', function (event) {
+      event.preventDefault();
+      try {
+        result.textContent = '';
+        asyncStorage.getItem('items', function (value) {
+          if (value === null) {
+            value = items;
+            log("Nothing stored");
+          } else {
+            try {
+              value = JSON.parse(value);
+              log("Number of items: " + value.length);
+              log(value);
+            } catch (e) {
+              log("Error retrieving stored items: " + e);
+            }
+          }
+        });
+      } catch (e) {
+        log("Error in displayStorage: " + e);
+      }
+      return false;
+    });
+    document.getElementById('sendStorage').addEventListener('click', function (event) {
+      event.preventDefault();
+      try {
+        result.textContent = '';
+        asyncStorage.getItem('items', function (value) {
+          var toSend = 0;
+          if (value === null) {
+            log('Nothing to send');
+          } else {
+            try {
+              items = JSON.parse(value);
+              toSend = items.length;
+              send(function onSent() {
+                log("Done sending " + toSend + " items");
+                asyncStorage.setItem('items', JSON.stringify([]), function () {
+                  log("Done reseting storage");
+                });
+              });
+            } catch (e) {
+              log("Error retrieving stored items: " + e);
+            }
+          }
+        });
+      } catch (e) {
+        log("Error in sendStorage: " + e);
+      }
+      return false;
+    });
+    document.getElementById('clearStorage').addEventListener('click', function (event) {
+      event.preventDefault();
+      try {
+        result.textContent = '';
+        asyncStorage.removeItem('items', function () {
+          log("Storage deleted");
+        });
+      } catch (e) {
+        log("Error in clearStorage: " + e);
+      }
+      return false;
+    });
+  } catch (e) {
+    log(e);
+  }
 });
 
