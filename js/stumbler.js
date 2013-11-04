@@ -1,5 +1,6 @@
 //jshint browser: true
 /*global asyncStorage: true */
+/*exported createMock */
 var result,
     watchId,
     items = [],
@@ -370,4 +371,59 @@ window.addEventListener("load", function () {
     log(e);
   }
 });
+// {{ Create Mock
+function createMock() {
+  "use strict";
+  navigator.mozWifiManager = {
+    getNetworks: function () {
+      var res = {};
+      window.setTimeout(function () {
+        var self = {
+          result: [
+            {
+              ssid: '00:00:00:00',
+              signalStrengh: 0
+            }
+          ]
+        };
+        res.onsuccess.call(self);
+      }, 500);
+      return res;
+    }
+  };
+  var info = {
+    'type': 'gsm',
+    'network': {
+      'mcc': 'mcc',
+      'mnc': 'mnc'
+    },
+    'cell': {
+      'gsmLocationAreaCode': '123',
+      'gsmCellId': '456'
+    },
+    'signalStrength': 1
+  };
+  navigator.mozMobileConnection = {
+    data: info,
+    voice: info
+  };
+  window.MozActivity = function (options) {
+    var self = this;
+    window.setTimeout(function () {
+      var res = {
+        result: {
+          coords: {
+            latitude: 48.856578,
+            longitude: 2.351828,
+            accuracy: 500
+          }
+        }
+      };
+      console.log(self);
+      self.onsuccess.call(res);
+    }, 500);
+  };
+}
+
+// }}
 
