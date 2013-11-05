@@ -5,14 +5,9 @@ var result,
     watchId,
     items = [],
     item,
-    geoOptions,
+    nbItems,
     curPos = {},  // Current Geoloc
     curCell;      // Current Cell Id
-var geoOptions = {
-  enableHighAccuracy: true,
-  timeout: 60000, // 1 minute
-  maximumAge: 0
-};
 var utils = {
   format:  function format(str) {
     "use strict";
@@ -123,6 +118,7 @@ function onInfosCollected() {
         }
         asyncStorage.setItem('items', JSON.stringify(value), function () {
           utils.log("Done adding " + items.length + " items. " + value.length + " items stored");
+          nbItems.innerHTML = value.length;
           items = [];
         });
       });
@@ -244,13 +240,21 @@ function onGeolocError(err) {
 }
 // }}
 
+function getGeolocOptions() {
+  "use strict";
+  return {
+    enableHighAccuracy: document.getElementById('geoAccur').checked,
+    timeout: parseInt(document.getElementById('geoTo').value, 10),
+    maximumAge: parseInt(document.getElementById('geoMax').value, 10)
+  };
+}
 function getGeoloc() {
   "use strict";
 
   utils.log("Getting infos");
 
   if (document.querySelector('[name=geoloc]:checked').value === 'GPS') {
-    navigator.geolocation.getCurrentPosition(onGeolocSuccess, onGeolocError, geoOptions);
+    navigator.geolocation.getCurrentPosition(onGeolocSuccess, onGeolocError, getGeolocOptions());
   } else {
     var activity = new window.MozActivity({
       name: "clochix.geoloc"
@@ -306,7 +310,7 @@ function startMonitoring() {
     if (conn && conn.voice) {
       conn.addEventListener('voicechange', onVoiceChange);
     }
-    watchId = navigator.geolocation.watchPosition(onPosChange, onGeolocError, geoOptions);
+    watchId = navigator.geolocation.watchPosition(onPosChange, onGeolocError, getGeolocOptions());
   } catch (e) {
     utils.log("Error in startMonitoring: " + e);
   }
@@ -322,7 +326,17 @@ function stopMonitoring() {
 window.addEventListener("load", function () {
   "use strict";
   try {
-    result = document.getElementById("result");
+    result  = document.getElementById("result");
+    nbItems = document.getElementById("nbItems");
+    document.body.addEventListener('click', function (event) {
+      var elmt;
+      if (event.target.dataset.target) {
+        elmt = document.getElementById(event.target.dataset.target);
+        if (elmt) {
+          elmt.classList.toggle('hidden');
+        }
+      }
+    });
     document.getElementById('mobile').addEventListener('click', getGeoloc);
     document.getElementById('monitor').addEventListener('click', function () {
       if (this.dataset.state === 'stopped') {
@@ -390,6 +404,7 @@ window.addEventListener("load", function () {
                 utils.log("Done sending " + toSend + " items");
                 asyncStorage.setItem('items', JSON.stringify([]), function () {
                   utils.log("Done reseting storage");
+                  nbItems.innerHTML = "0";
                 });
               });
             } catch (e) {
@@ -408,12 +423,29 @@ window.addEventListener("load", function () {
         result.textContent = '';
         asyncStorage.removeItem('items', function () {
           utils.log("Storage deleted");
+          nbItems.innerHTML = "0";
         });
       } catch (e) {
         utils.log("Error in clearStorage: " + e);
       }
       return false;
     });
+    try {
+      asyncStorage.getItem('items', function (value) {
+        if (value === null) {
+          nbItems.innerHTML = "0";
+        } else {
+          try {
+            value = JSON.parse(value);
+            nbItems.innerHTML = value.length;
+          } catch (e) {
+            utils.log("Error retrieving stored items: " + e);
+          }
+        }
+      });
+    } catch (e) {
+      utils.log("Error in displayStorage: " + e);
+    }
   } catch (e) {
     utils.log(e);
   }

@@ -10,32 +10,42 @@
     <link rel='stylesheet' href='style/stumbler.css' type='text/css' />
   </head>
   <body class="">
-    <h1>Push location Infos</h1>
-    <p>
+    <h1>FxStumbler</h1>
+    <section>
       <button type="button" id="mobile">Push infos</button>
       <button type="button" id="monitor" data-state="stopped">Start monitoring</button>
       <button type="button" id="search" >Get my position</button>
       <button type="button" id="clearLogs">Clear logs</button>
-    </p>
-    <p>
-      <button type="button" id="displayStorage">Display Storage</button>
-      <button type="button" id="sendStorage">Send Storage</button>
-      <button type="button" id="clearStorage">Clear Storage</button>
-    </p>
-    <p>
-      Geoloc:
-      <label><input type="radio" name="geoloc" value="GPS" checked/>GPS</label>
-      <label><input type="radio" name="geoloc" value="Ask" />Ask</label>
-    </p>
-    <p>
-      Action:
-      <label><input type="radio" name="action" value="send" checked/>Send</label>
-      <label><input type="radio" name="action" value="store" />Store</label>
-      <label><input type="radio" name="action" value="nothing" />Nothing</label>
-    </p>
-    <p>
-      <label for="username">Username: <input type="text" name="username" /></label>
-    </p>
+    </section>
+    <h2 data-target="storage">Storage (<span id="nbItems"></span> items)</h2>
+    <section id="storage" class="hidden">
+      <button type="button" id="displayStorage">Display</button>
+      <button type="button" id="sendStorage">Send</button>
+      <button type="button" id="clearStorage">Clear</button>
+    </section>
+    <h2 data-target="options">Options</h2>
+    <section id="options" class="hidden">
+      <p>
+        Geoloc:
+        <label><input type="radio" name="geoloc" value="GPS" checked/>GPS</label>
+        <label><input type="radio" name="geoloc" value="Ask" />Ask</label>
+      </p>
+      <p>
+        Action:
+        <label><input type="radio" name="action" value="send" checked/>Send</label>
+        <label><input type="radio" name="action" value="store" />Store</label>
+        <label><input type="radio" name="action" value="nothing" />Nothing</label>
+      </p>
+      <p>
+        <label for="username">Username: <input type="text" name="username" /></label>
+      </p>
+      <p><label>High Accuracy <input type="checkbox" checked id="geoAccur"/></label></p>
+      <p><label>Timeout <input type="text" value="60000" id="geoTo"/></label></p>
+      <p><label>Maximum age <input type="text" value="0" id="geoMax"/></label></p>
+      </p>
+    </section>
+    <section>
+    </section>
     <p>
       <pre id="result"></pre>
     </p>
