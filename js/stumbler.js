@@ -13,13 +13,20 @@ var geoOptions = {
   timeout: 60000, // 1 minute
   maximumAge: 0
 };
-function log(message) {
-  "use strict";
-  if (typeof message === 'object') {
-    message = JSON.stringify(message, null, '  ');
+var utils = {
+  format:  function format(str) {
+    "use strict";
+    var params = Array.prototype.splice.call(arguments, 1);
+    return (str.replace(/%s/g, function () {return params.shift(); }));
+  },
+  log: function log(message) {
+    "use strict";
+    if (typeof message === 'object') {
+      message = JSON.stringify(message, null, '  ');
+    }
+    result.textContent += '[' + new Date().toISOString().substr(11, 8) + ']' + message + "\n";
   }
-  result.textContent += '[' + new Date().toISOString().substr(11, 8) + ']' + message + "\n";
-}
+};
 // send {{
 function send(cb) {
   //jshint maxstatements: 30
@@ -30,8 +37,8 @@ function send(cb) {
     mozAnon: true,
     mozSystem: true
   };
-  log("[Send] Sending…");
-  log(items);
+  utils.log("[Send] Sending…");
+  utils.log(items);
   try {
     xhr = new XMLHttpRequest(options);
     xhr.open("POST", "https://location.services.mozilla.com/v1/submit", false);
@@ -41,24 +48,57 @@ function send(cb) {
     }
     xhr.send(JSON.stringify({items: items}));
     if (xhr.status === 204) {
-      log("[Send] OK");
+      utils.log("[Send] OK");
       items = [];
       if (cb) {
         cb();
       }
     } else {
-      log("[Send] K0");
+      utils.log("[Send] K0");
       try {
-        log("[Send] Error sending datas: ");
+        utils.log("[Send] Error sending datas: ");
         res = JSON.parse(xhr.responseText).errors;
-        res.forEach(function (error) { log(error); });
+        res.forEach(function (error) { utils.log(error); });
       } catch (e) {
-        log('[Send] Unable to parse response: ' + e);
+        utils.log('[Send] Unable to parse response: ' + e);
       }
     }
   } catch (e) {
-    log('[Send] Error sending datas: ' + e);
+    utils.log('[Send] Error sending datas: ' + e);
   }
+}
+function search() {
+  //jshint maxstatements: 30
+  "use strict";
+  var xhr, options, res;
+  options = {
+    mozAnon: true,
+    mozSystem: true
+  };
+  utils.log("[Search] Searching…");
+  try {
+    if (item.cell.length > 0) {
+      item.radio = item.cell[0].radio;
+    }
+    utils.log(item);
+    xhr = new XMLHttpRequest(options);
+    xhr.open("POST", "https://location.services.mozilla.com/v1/search", false);
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    xhr.send(JSON.stringify(item));
+    if (xhr.status === 200) {
+      res = JSON.parse(xhr.responseText);
+      if (res.status === "ok") {
+        utils.log(utils.format("[Search] OK\nlat: %s\nlon: %s\naccuracy: %s", res.lat, res.lon, res.accuracy));
+      } else {
+        utils.log("[Search] " + res.status);
+      }
+    } else {
+      utils.log(utils.format("[Search] K0: %s - %s - %s", xhr.status, xhr.statusText, xhr.responseText));
+    }
+  } catch (e) {
+    utils.log('[Search] Error sending datas: ' + e);
+  }
+  items = [];
 }
 // }}
 function onInfosCollected() {
@@ -76,31 +116,31 @@ function onInfosCollected() {
           try {
             value = JSON.parse(value);
           } catch (e) {
-            log("Error retrieving stored items: " + e);
+            utils.log("Error retrieving stored items: " + e);
             value = [];
           }
           value = value.concat(items);
         }
         asyncStorage.setItem('items', JSON.stringify(value), function () {
-          log("Done adding " + items.length + " items. " + value.length + " items stored");
+          utils.log("Done adding " + items.length + " items. " + value.length + " items stored");
           items = [];
         });
       });
       break;
     case 'nothing':
-      log("Done");
-      log(items);
+      utils.log("Done");
+      utils.log(items);
       break;
     }
   } catch (e) {
-    log("Error in onInfosCollected: " + e);
+    utils.log("Error in onInfosCollected: " + e);
   }
 }
 // Cell {{
 function getCellInfos() {
   "use strict";
   var conn, data, voice, cell = {}, type, tr;
-  log("[cell] Getting cell infos");
+  utils.log("[cell] Getting cell infos");
   // Convert radio type
   tr = {
     'gsm': ["gsm", "edge", "gprs", "hspa", "hsdpa", "hspa+", "hsupa"],
@@ -126,9 +166,9 @@ function getCellInfos() {
     cell.asu    = undefined;
     cell.ta     = undefined;
     cell.psc    = undefined;
-    log("[cell] Done");
+    utils.log("[cell] Done");
   } catch (e) {
-    log("[cell] Error : " + e);
+    utils.log("[cell] Error : " + e);
   }
   return cell;
 }
@@ -140,12 +180,22 @@ function getWifiInfos(cb) {
       request,
       networks = [];
 
-  log("[wifi] Getting Wifi infos");
+  function onWifiInfos(networks) {
+    try {
+      item.wifi = networks;
+      items.push(item);
+      cb();
+    } catch (e) {
+      utils.log("[wifi] Error onWifiInfos: " + e);
+    }
+  }
+
+  utils.log("[wifi] Getting Wifi infos");
   try {
     wifi     = navigator.mozWifiManager;
     request  = wifi.getNetworks();
     request.onsuccess = function () {
-      log("[wifi] found " + this.result.length + " networks");
+      utils.log("[wifi] found " + this.result.length + " networks");
       this.result.forEach(function (network) {
         var net;
         if (!/_nomap/.test(network.ssid)) {
@@ -158,27 +208,16 @@ function getWifiInfos(cb) {
           networks.push(net);
         }
       });
-      log("[wifi] Done");
-      cb(networks);
+      utils.log("[wifi] Done");
+      onWifiInfos(networks);
     };
     request.onerror = function (err) {
-      log('[wifi] Something goes wrong: ' + err);
-      cb(networks);
+      utils.log('[wifi] Something goes wrong: ' + err);
+      onWifiInfos(networks);
     };
   } catch (e) {
-    log('[wifi] Something goes wrong: ' + e);
-    cb(networks);
-  }
-}
-function onWifiInfos(networks) {
-  "use strict";
-  try {
-    item.wifi = networks;
-    item.cell = [ getCellInfos() ];
-    items.push(item);
-    onInfosCollected();
-  } catch (e) {
-    log("[wifi] Error onWifiInfos: " + e);
+    utils.log('[wifi] Something goes wrong: ' + e);
+    onWifiInfos(networks);
   }
 }
 // }}
@@ -187,27 +226,28 @@ function onGeolocSuccess(pos) {
   "use strict";
   try {
     item = {};
+    item.cell     = [ getCellInfos() ];
     item.lat      = pos.coords.latitude;
     item.lon      = pos.coords.longitude;
     item.accuracy = pos.coords.accuracy;
-    log("[geoloc] Done: " + item.lat + '/' + item.lon + '/' + item.accuracy);
+    utils.log("[geoloc] Done: " + item.lat + '/' + item.lon + '/' + item.accuracy);
 
-    getWifiInfos(onWifiInfos);
+    getWifiInfos(onInfosCollected);
   } catch (e) {
-    log("[geoloc] Error in onGeolocSuccess: " + pos);
+    utils.log("[geoloc] Error in onGeolocSuccess: " + pos);
   }
 }
 function onGeolocError(err) {
   "use strict";
-  log('[geoloc] Error: ' + err.code + ' : ' + err.message);
-  log('[geoloc] Aborting.');
+  utils.log('[geoloc] Error: ' + err.code + ' : ' + err.message);
+  utils.log('[geoloc] Aborting.');
 }
 // }}
 
-function getMobileInfos() {
+function getGeoloc() {
   "use strict";
 
-  log("Getting infos");
+  utils.log("Getting infos");
 
   if (document.querySelector('[name=geoloc]:checked').value === 'GPS') {
     navigator.geolocation.getCurrentPosition(onGeolocSuccess, onGeolocError, geoOptions);
@@ -219,8 +259,8 @@ function getMobileInfos() {
       onGeolocSuccess(this.result);
     };
     activity.onerror = function () {
-      log('[geoloc] Error getting location: ' + this.error.name);
-      log('[geoloc] Aborting.');
+      utils.log('[geoloc] Error getting location: ' + this.error.name);
+      utils.log('[geoloc] Aborting.');
     };
   }
 
@@ -233,26 +273,26 @@ function onVoiceChange() {
     if (conn && conn.voice) {
       if (curCell !== conn.voice.cell.gsmCellId) {
         curCell = conn.voice.cell.gsmCellId;
-        log("[cell] New cell: " + curCell);
-        getMobileInfos();
+        utils.log("[cell] New cell: " + curCell);
+        getGeoloc();
       }
     }
   } catch (e) {
-    log("Error in onVoiceChange: " + e);
+    utils.log("Error in onVoiceChange: " + e);
   }
 }
 function onPosChange(pos) {
   "use strict";
   try {
     if (curPos.latitude !== pos.coords.latitude || curPos.longitude !== pos.coords.longitude || curPos.accuracy !== pos.coords.accuracy) {
-      log("[geoloc] New position:" + pos.coords.latitude + "/" + pos.coords.longitude + "/" + pos.coords.accuracy);
+      utils.log("[geoloc] New position:" + pos.coords.latitude + "/" + pos.coords.longitude + "/" + pos.coords.accuracy);
       curPos.latitude  = pos.coords.latitude;
       curPos.longitude = pos.coords.longitude;
       curPos.accuracy  = pos.coords.accuracy;
       onGeolocSuccess(pos);
     }
   } catch (e) {
-    log("Error in onPosChange: " + e);
+    utils.log("Error in onPosChange: " + e);
   }
 }
 function startMonitoring() {
@@ -268,7 +308,7 @@ function startMonitoring() {
     }
     watchId = navigator.geolocation.watchPosition(onPosChange, onGeolocError, geoOptions);
   } catch (e) {
-    log("Error in startMonitoring: " + e);
+    utils.log("Error in startMonitoring: " + e);
   }
 }
 function stopMonitoring() {
@@ -283,7 +323,7 @@ window.addEventListener("load", function () {
   "use strict";
   try {
     result = document.getElementById("result");
-    document.getElementById('mobile').addEventListener('click', getMobileInfos);
+    document.getElementById('mobile').addEventListener('click', getGeoloc);
     document.getElementById('monitor').addEventListener('click', function () {
       if (this.dataset.state === 'stopped') {
         startMonitoring();
@@ -300,8 +340,15 @@ window.addEventListener("load", function () {
       try {
         result.textContent = '';
       } catch (e) {
-        log("Error in clearLogs: " + e);
+        utils.log("Error in clearLogs: " + e);
       }
+      return false;
+    });
+    document.getElementById('search').addEventListener('click', function (event) {
+      event.preventDefault();
+      item = {};
+      item.cell = [ getCellInfos() ];
+      getWifiInfos(search);
       return false;
     });
     document.getElementById('displayStorage').addEventListener('click', function (event) {
@@ -311,19 +358,19 @@ window.addEventListener("load", function () {
         asyncStorage.getItem('items', function (value) {
           if (value === null) {
             value = items;
-            log("Nothing stored");
+            utils.log("Nothing stored");
           } else {
             try {
               value = JSON.parse(value);
-              log("Number of items: " + value.length);
-              log(value);
+              utils.log("Number of items: " + value.length);
+              utils.log(value);
             } catch (e) {
-              log("Error retrieving stored items: " + e);
+              utils.log("Error retrieving stored items: " + e);
             }
           }
         });
       } catch (e) {
-        log("Error in displayStorage: " + e);
+        utils.log("Error in displayStorage: " + e);
       }
       return false;
     });
@@ -334,24 +381,24 @@ window.addEventListener("load", function () {
         asyncStorage.getItem('items', function (value) {
           var toSend = 0;
           if (value === null) {
-            log('Nothing to send');
+            utils.log('Nothing to send');
           } else {
             try {
               items = JSON.parse(value);
               toSend = items.length;
               send(function onSent() {
-                log("Done sending " + toSend + " items");
+                utils.log("Done sending " + toSend + " items");
                 asyncStorage.setItem('items', JSON.stringify([]), function () {
-                  log("Done reseting storage");
+                  utils.log("Done reseting storage");
                 });
               });
             } catch (e) {
-              log("Error retrieving stored items: " + e);
+              utils.log("Error retrieving stored items: " + e);
             }
           }
         });
       } catch (e) {
-        log("Error in sendStorage: " + e);
+        utils.log("Error in sendStorage: " + e);
       }
       return false;
     });
@@ -360,15 +407,15 @@ window.addEventListener("load", function () {
       try {
         result.textContent = '';
         asyncStorage.removeItem('items', function () {
-          log("Storage deleted");
+          utils.log("Storage deleted");
         });
       } catch (e) {
-        log("Error in clearStorage: " + e);
+        utils.log("Error in clearStorage: " + e);
       }
       return false;
     });
   } catch (e) {
-    log(e);
+    utils.log(e);
   }
 });
 // {{ Create Mock
