@@ -14,12 +14,28 @@ var utils = {
     var params = Array.prototype.splice.call(arguments, 1);
     return (str.replace(/%s/g, function () {return params.shift(); }));
   },
-  log: function log(message) {
+  logLevel: 'debug',
+  logLevels: ['debug', 'info', 'warning', 'error'],
+  log: function log() {
     "use strict";
-    if (typeof message === 'object') {
-      message = JSON.stringify(message, null, '  ');
+    var args     = Array.prototype.slice.call(arguments),
+        level    = args.pop(),
+        levelNum = utils.logLevels.indexOf(level),
+        message;
+    if (levelNum === -1) {
+      console.log("Unknown log level " + level);
     }
-    result.textContent += '[' + new Date().toISOString().substr(11, 8) + ']' + message + "\n";
+    if (levelNum >= utils.logLevels.indexOf(utils.logLevel)) {
+      if (args.length === 1) {
+        message = args[0];
+        if (typeof message === 'object') {
+          message = JSON.stringify(message, null, '  ');
+        }
+      } else {
+        message = utils.format.apply(null, args);
+      }
+      result.innerHTML += utils.format('<span class="%s">[%s][%s]</span> %s\n', level, new Date().toISOString().substr(11, 8), level, message);
+    }
   }
 };
 // send {{
@@ -32,8 +48,8 @@ function send(cb) {
     mozAnon: true,
     mozSystem: true
   };
-  utils.log("[Send] Sending…");
-  utils.log(items);
+  utils.log("[Send] Sending…", "debug");
+  utils.log(items, "debug");
   try {
     xhr = new XMLHttpRequest(options);
     xhr.open("POST", "https://location.services.mozilla.com/v1/submit", false);
@@ -43,23 +59,22 @@ function send(cb) {
     }
     xhr.send(JSON.stringify({items: items}));
     if (xhr.status === 204) {
-      utils.log("[Send] OK");
+      utils.log("[Send] Done sending %s measurements", items.length, "info");
       items = [];
       if (cb) {
         cb();
       }
     } else {
-      utils.log("[Send] K0");
       try {
-        utils.log("[Send] Error sending datas: ");
+        utils.log("[Send] Error sending datas: ", "error");
         res = JSON.parse(xhr.responseText).errors;
-        res.forEach(function (error) { utils.log(error); });
+        res.forEach(function (error) { utils.log(error, "error"); });
       } catch (e) {
-        utils.log('[Send] Unable to parse response: ' + e);
+        utils.log("[Send] Unable to parse response: " + e, "error");
       }
     }
   } catch (e) {
-    utils.log('[Send] Error sending datas: ' + e);
+    utils.log("[Send] Error sending datas: " + e, "error");
   }
 }
 function search() {
@@ -70,12 +85,12 @@ function search() {
     mozAnon: true,
     mozSystem: true
   };
-  utils.log("[Search] Searching…");
+  utils.log("[Search] Searching…", "debug");
   try {
     if (item.cell.length > 0) {
       item.radio = item.cell[0].radio;
     }
-    utils.log(item);
+    utils.log(item, "debug");
     xhr = new XMLHttpRequest(options);
     xhr.open("POST", "https://location.services.mozilla.com/v1/search", false);
     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
@@ -83,15 +98,15 @@ function search() {
     if (xhr.status === 200) {
       res = JSON.parse(xhr.responseText);
       if (res.status === "ok") {
-        utils.log(utils.format("[Search] OK\nlat: %s\nlon: %s\naccuracy: %s", res.lat, res.lon, res.accuracy));
+        utils.log("[Search] OK\nlat: %s\nlon: %s\naccuracy: %s", res.lat, res.lon, res.accuracy, "info");
       } else {
-        utils.log("[Search] " + res.status);
+        utils.log("[Search] " + res.status, "error");
       }
     } else {
-      utils.log(utils.format("[Search] K0: %s - %s - %s", xhr.status, xhr.statusText, xhr.responseText));
+      utils.log("[Search] K0: %s - %s - %s", xhr.status, xhr.statusText, xhr.responseText, "error");
     }
   } catch (e) {
-    utils.log('[Search] Error sending datas: ' + e);
+    utils.log('[Search] Error sending datas: ' + e, "error");
   }
   items = [];
 }
@@ -111,32 +126,32 @@ function onInfosCollected() {
           try {
             value = JSON.parse(value);
           } catch (e) {
-            utils.log("Error retrieving stored items: " + e);
+            utils.log("Error retrieving stored items: " + e, "error");
             value = [];
           }
           value = value.concat(items);
         }
         asyncStorage.setItem('items', JSON.stringify(value), function () {
-          utils.log("Done adding " + items.length + " items. " + value.length + " items stored");
+          utils.log("Done adding %s items. %s items stored.", items.length, value.length, "info");
           nbItems.innerHTML = value.length;
           items = [];
         });
       });
       break;
     case 'nothing':
-      utils.log("Done");
-      utils.log(items);
+      utils.log("Done", "info");
+      utils.log(items, "debug");
       break;
     }
   } catch (e) {
-    utils.log("Error in onInfosCollected: " + e);
+    utils.log("Error in onInfosCollected: " + e, "error");
   }
 }
 // Cell {{
 function getCellInfos() {
   "use strict";
   var conn, data, voice, cell = {}, type, tr;
-  utils.log("[cell] Getting cell infos");
+  utils.log("[cell] Getting cell infos", "debug");
   // Convert radio type
   tr = {
     'gsm': ["gsm", "edge", "gprs", "hspa", "hsdpa", "hspa+", "hsupa"],
@@ -162,9 +177,9 @@ function getCellInfos() {
     cell.asu    = undefined;
     cell.ta     = undefined;
     cell.psc    = undefined;
-    utils.log("[cell] Done");
+    utils.log("[cell] Done", "debug");
   } catch (e) {
-    utils.log("[cell] Error : " + e);
+    utils.log("[cell] Error : " + e, "error");
   }
   return cell;
 }
@@ -182,16 +197,16 @@ function getWifiInfos(cb) {
       items.push(item);
       cb();
     } catch (e) {
-      utils.log("[wifi] Error onWifiInfos: " + e);
+      utils.log("[wifi] Error onWifiInfos: " + e, "error");
     }
   }
 
-  utils.log("[wifi] Getting Wifi infos");
+  utils.log("[wifi] Getting Wifi infos", "debug");
   try {
     wifi     = navigator.mozWifiManager;
     request  = wifi.getNetworks();
     request.onsuccess = function () {
-      utils.log("[wifi] found " + this.result.length + " networks");
+      utils.log("[wifi] found " + this.result.length + " networks", "info");
       this.result.forEach(function (network) {
         var net;
         if (!/_nomap/.test(network.ssid)) {
@@ -204,15 +219,15 @@ function getWifiInfos(cb) {
           networks.push(net);
         }
       });
-      utils.log("[wifi] Done");
+      utils.log("[wifi] Done", "debug");
       onWifiInfos(networks);
     };
     request.onerror = function (err) {
-      utils.log('[wifi] Something goes wrong: ' + err);
+      utils.log('[wifi] Something goes wrong: ' + err, "error");
       onWifiInfos(networks);
     };
   } catch (e) {
-    utils.log('[wifi] Something goes wrong: ' + e);
+    utils.log('[wifi] Something goes wrong: ' + e, "error");
     onWifiInfos(networks);
   }
 }
@@ -226,17 +241,17 @@ function onGeolocSuccess(pos) {
     item.lat      = pos.coords.latitude;
     item.lon      = pos.coords.longitude;
     item.accuracy = pos.coords.accuracy;
-    utils.log("[geoloc] Done: " + item.lat + '/' + item.lon + '/' + item.accuracy);
+    utils.log("[geoloc] Done: %s / %s / %s", item.lat, item.lon, item.accuracy, "info");
 
     getWifiInfos(onInfosCollected);
   } catch (e) {
-    utils.log("[geoloc] Error in onGeolocSuccess: " + pos);
+    utils.log("[geoloc] Error in onGeolocSuccess: " + pos, "error");
   }
 }
 function onGeolocError(err) {
   "use strict";
-  utils.log('[geoloc] Error: ' + err.code + ' : ' + err.message);
-  utils.log('[geoloc] Aborting.');
+  utils.log('[geoloc] Error: ' + err.code + ' : ' + err.message, "error");
+  utils.log('[geoloc] Aborting.', "error");
 }
 // }}
 
@@ -251,7 +266,7 @@ function getGeolocOptions() {
 function getGeoloc() {
   "use strict";
 
-  utils.log("Getting infos");
+  utils.log("Getting infos", "debug");
 
   if (document.querySelector('[name=geoloc]:checked').value === 'GPS') {
     navigator.geolocation.getCurrentPosition(onGeolocSuccess, onGeolocError, getGeolocOptions());
@@ -263,8 +278,8 @@ function getGeoloc() {
       onGeolocSuccess(this.result);
     };
     activity.onerror = function () {
-      utils.log('[geoloc] Error getting location: ' + this.error.name);
-      utils.log('[geoloc] Aborting.');
+      utils.log('[geoloc] Error getting location: ' + this.error.name, "error");
+      utils.log('[geoloc] Aborting.', "error");
     };
   }
 
@@ -277,26 +292,26 @@ function onVoiceChange() {
     if (conn && conn.voice) {
       if (curCell !== conn.voice.cell.gsmCellId) {
         curCell = conn.voice.cell.gsmCellId;
-        utils.log("[cell] New cell: " + curCell);
+        utils.log("[cell] New cell: " + curCell, "debug");
         getGeoloc();
       }
     }
   } catch (e) {
-    utils.log("Error in onVoiceChange: " + e);
+    utils.log("Error in onVoiceChange: " + e, "error");
   }
 }
 function onPosChange(pos) {
   "use strict";
   try {
     if (curPos.latitude !== pos.coords.latitude || curPos.longitude !== pos.coords.longitude || curPos.accuracy !== pos.coords.accuracy) {
-      utils.log("[geoloc] New position:" + pos.coords.latitude + "/" + pos.coords.longitude + "/" + pos.coords.accuracy);
+      utils.log("[geoloc] New position:" + pos.coords.latitude + "/" + pos.coords.longitude + "/" + pos.coords.accuracy, "info");
       curPos.latitude  = pos.coords.latitude;
       curPos.longitude = pos.coords.longitude;
       curPos.accuracy  = pos.coords.accuracy;
       onGeolocSuccess(pos);
     }
   } catch (e) {
-    utils.log("Error in onPosChange: " + e);
+    utils.log("Error in onPosChange: " + e, "error");
   }
 }
 function startMonitoring() {
@@ -312,7 +327,7 @@ function startMonitoring() {
     }
     watchId = navigator.geolocation.watchPosition(onPosChange, onGeolocError, getGeolocOptions());
   } catch (e) {
-    utils.log("Error in startMonitoring: " + e);
+    utils.log("Error in startMonitoring: " + e, "error");
   }
 }
 function stopMonitoring() {
@@ -354,7 +369,7 @@ window.addEventListener("load", function () {
       try {
         result.textContent = '';
       } catch (e) {
-        utils.log("Error in clearLogs: " + e);
+        utils.log("Error in clearLogs: " + e, "error");
       }
       return false;
     });
@@ -372,19 +387,19 @@ window.addEventListener("load", function () {
         asyncStorage.getItem('items', function (value) {
           if (value === null) {
             value = items;
-            utils.log("Nothing stored");
+            utils.log("Nothing stored", "info");
           } else {
             try {
               value = JSON.parse(value);
-              utils.log("Number of items: " + value.length);
-              utils.log(value);
+              utils.log("Number of items: " + value.length, "info");
+              utils.log(value, "info");
             } catch (e) {
-              utils.log("Error retrieving stored items: " + e);
+              utils.log("Error retrieving stored items: " + e, "error");
             }
           }
         });
       } catch (e) {
-        utils.log("Error in displayStorage: " + e);
+        utils.log("Error in displayStorage: " + e, "error");
       }
       return false;
     });
@@ -395,25 +410,25 @@ window.addEventListener("load", function () {
         asyncStorage.getItem('items', function (value) {
           var toSend = 0;
           if (value === null) {
-            utils.log('Nothing to send');
+            utils.log('Nothing to send', "warning");
           } else {
             try {
               items = JSON.parse(value);
               toSend = items.length;
               send(function onSent() {
-                utils.log("Done sending " + toSend + " items");
+                utils.log("Done sending " + toSend + " items", "info");
                 asyncStorage.setItem('items', JSON.stringify([]), function () {
-                  utils.log("Done reseting storage");
+                  utils.log("Done reseting storage", "info");
                   nbItems.innerHTML = "0";
                 });
               });
             } catch (e) {
-              utils.log("Error retrieving stored items: " + e);
+              utils.log("Error retrieving stored items: " + e, "error");
             }
           }
         });
       } catch (e) {
-        utils.log("Error in sendStorage: " + e);
+        utils.log("Error in sendStorage: " + e, "error");
       }
       return false;
     });
@@ -422,14 +437,18 @@ window.addEventListener("load", function () {
       try {
         result.textContent = '';
         asyncStorage.removeItem('items', function () {
-          utils.log("Storage deleted");
+          utils.log("Storage deleted", "info");
           nbItems.innerHTML = "0";
         });
       } catch (e) {
-        utils.log("Error in clearStorage: " + e);
+        utils.log("Error in clearStorage: " + e, "error");
       }
       return false;
     });
+    document.getElementById('settingsLoglevel').addEventListener('click', function (event) {
+      utils.logLevel = document.querySelector('[name=loglevel]:checked').value;
+    });
+    utils.logLevel = document.querySelector('[name=loglevel]:checked').value;
     try {
       asyncStorage.getItem('items', function (value) {
         if (value === null) {
@@ -439,15 +458,15 @@ window.addEventListener("load", function () {
             value = JSON.parse(value);
             nbItems.innerHTML = value.length;
           } catch (e) {
-            utils.log("Error retrieving stored items: " + e);
+            utils.log("Error retrieving stored items: " + e, "error");
           }
         }
       });
     } catch (e) {
-      utils.log("Error in displayStorage: " + e);
+      utils.log("Error in displayStorage: " + e, "error");
     }
   } catch (e) {
-    utils.log(e);
+    utils.log(e, "error");
   }
 });
 // {{ Create Mock
