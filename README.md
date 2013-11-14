@@ -2,9 +2,9 @@
 
 Firefox OS Stumbler for Mozilla [http://location.services.mozilla.com](http://location.services.mozilla.com).
 
-This application uses API only available to certified apps. So you can only install it on a developer phone. You need to [enable remote debugging](https://developer.mozilla.org/en-US/docs/Mozilla/Firefox_OS/Debugging/Developer_settings#Remote_debugging) on your phone.
+This application uses phone APIs only available to certified apps for the moment ([WifiManager](https://developer.mozilla.org/en-US/docs/Web/API/WifiManager), [MobileConnection](https://developer.mozilla.org/en-US/docs/Web/API/MozMobileConnection)) . So you can only install it on a developer phone. You need to [enable remote debugging](https://developer.mozilla.org/en-US/docs/Mozilla/Firefox_OS/Debugging/Developer_settings#Remote_debugging) on your phone.
 
-To push the application to the phone, I [push it from the Firefox OS Simulator](https://developer.mozilla.org/en-US/docs/Tools/Firefox_OS_Simulator#Push_to_device).
+To push the application to the phone, you can use the [Firefox OS Simulator](https://developer.mozilla.org/en-US/docs/Tools/Firefox_OS_Simulator#Push_to_device) or the [App Manager](https://developer.mozilla.org/en-US/docs/Mozilla/Firefox_OS/Using_the_App_Manager).
 
 ** Current status of debugging certified applications **
 
@@ -17,6 +17,29 @@ To create the package, use
 
     rm stumbler.zip && zip -r stumbler.zip index.html js locales manifest.webapp style
 
+Or just `make all`
+
+## Usage
+
+### Main actions
+
+ - *Push infos*: get current location, cell and Wifi informations and perform the action selected in the options (default is to push to the Web service);
+ - *Start Monitoring*: perform the above action every time location or mobile cell information change;
+ - *Get my position* query the Web service to get current position according to mobile cells and wifi networks nearby;
+ - *Clear log*: clear the log window;
+
+### Storage options
+
+Collected information can by stored in a local database and sent to the server later. You can display the full content of the database (warning, a huge JSON array), send it or clear all records.
+
+### Options
+
+ - *Geoloc*: how to get current location: GPS or by using another app;
+ - *Action*: send data immediately, store them in local database or do nothing;
+ - *Username*: if you want your name in the [hall of fame](https://location.services.mozilla.com/leaders);
+ - *High accuracy, timeout and maximum age*: finetune [geolocation options](https://developer.mozilla.org/en-US/docs/Web/API/PositionOptions);
+ - *Log level*: verbosity of logs;
+
 ## Troubleshooting GeoLocation
 
-On my Keon, geolocation seems very inaccurate. So I added the ability to select current location on a card with a custom Web Activity. To use it, you need to install another application which implements `clochix.geoloc` Web Activity (see my [hereIam](https://github.com/clochix/hereIam) application) and check the "Ask" radio button. In this mode, monitoring of position changes is currently disabled;
+On my Keon, geolocation seems very inaccurate. So I added the ability to select current location on a map with a custom Web Activity. To use it, you need to install another application which implements `clochix.geoloc` Web Activity (see my [hereIam](https://github.com/clochix/hereIam) application) and check the "Ask" radio button. In this mode, monitoring of position changes is currently disabled;
