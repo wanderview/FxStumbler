@@ -434,14 +434,16 @@ window.addEventListener("load", function () {
     });
     document.getElementById('clearStorage').addEventListener('click', function (event) {
       event.preventDefault();
-      try {
-        result.textContent = '';
-        asyncStorage.removeItem('items', function () {
-          utils.log("Storage deleted", "info");
-          nbItems.innerHTML = "0";
-        });
-      } catch (e) {
-        utils.log("Error in clearStorage: " + e, "error");
+      if (window.confirm("Do you really want to delete local storage?")) {
+        try {
+          result.textContent = '';
+          asyncStorage.removeItem('items', function () {
+            utils.log("Storage deleted", "info");
+            nbItems.innerHTML = "0";
+          });
+        } catch (e) {
+          utils.log("Error in clearStorage: " + e, "error");
+        }
       }
       return false;
     });
