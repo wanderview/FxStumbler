@@ -34,11 +34,11 @@
           <h1>
 <a name="fxstumbler" class="anchor" href="#fxstumbler"><span class="octicon octicon-link"></span></a>FxStumbler</h1>
 
-<p>Firefox OS Stumbler for Mozilla <a href="http://location.services.mozilla.com">http://location.services.mozilla.com</a>.</p>
+<p>Firefox OS Client for <a href="http://location.services.mozilla.com">Mozilla Location Service</a>.</p>
 
-<p>This application uses API only available to certified apps. So you can only install it on a developer phone. You need to <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Firefox_OS/Debugging/Developer_settings#Remote_debugging">enable remote debugging</a> on your phone.</p>
+<p>This application uses phone APIs only available to certified apps for the moment (<a href="https://developer.mozilla.org/en-US/docs/Web/API/WifiManager">WifiManager</a>, <a href="https://developer.mozilla.org/en-US/docs/Web/API/MozMobileConnection">MobileConnection</a>) . So you can only install it on a developer phone. You need to <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Firefox_OS/Debugging/Developer_settings#Remote_debugging">enable remote debugging</a> on your phone.</p>
 
-<p>To push the application to the phone, I <a href="https://developer.mozilla.org/en-US/docs/Tools/Firefox_OS_Simulator#Push_to_device">push it from the Firefox OS Simulator</a>.</p>
+<p>To push the application to the phone, you can use the <a href="https://developer.mozilla.org/en-US/docs/Tools/Firefox_OS_Simulator#Push_to_device">Firefox OS Simulator</a> or the <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Firefox_OS/Using_the_App_Manager">App Manager</a>.</p>
 
 <p>** Current status of debugging certified applications **</p>
 
@@ -52,10 +52,46 @@
 <pre><code>rm stumbler.zip &amp;&amp; zip -r stumbler.zip index.html js locales manifest.webapp style
 </code></pre>
 
+<p>Or just <code>make all</code></p>
+
 <h2>
+<a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+<h3>
+<a name="main-actions" class="anchor" href="#main-actions"><span class="octicon octicon-link"></span></a>Main actions</h3>
+
+<ul>
+<li>
+<em>Push infos</em>: get current location, cell and Wifi informations and perform the action selected in the options (default is to push to the Web service);</li>
+<li>
+<em>Start Monitoring</em>: perform the above action every time location or mobile cell information change;</li>
+<li>
+<em>Get my position</em> query the Web service to get current position according to mobile cells and wifi networks nearby;</li>
+<li>
+<em>Clear log</em>: clear the log window;</li>
+</ul><h3>
+<a name="storage-options" class="anchor" href="#storage-options"><span class="octicon octicon-link"></span></a>Storage options</h3>
+
+<p>Collected information can by stored in a local database and sent to the server later. You can display the full content of the database (warning, a huge JSON array), send it or clear all records.</p>
+
+<h3>
+<a name="options" class="anchor" href="#options"><span class="octicon octicon-link"></span></a>Options</h3>
+
+<ul>
+<li>
+<em>Geoloc</em>: how to get current location: GPS or by using another app;</li>
+<li>
+<em>Action</em>: send data immediately, store them in local database or do nothing;</li>
+<li>
+<em>Username</em>: if you want your name in the <a href="https://location.services.mozilla.com/leaders">hall of fame</a>;</li>
+<li>
+<em>High accuracy, timeout and maximum age</em>: finetune <a href="https://developer.mozilla.org/en-US/docs/Web/API/PositionOptions">geolocation options</a>;</li>
+<li>
+<em>Log level</em>: verbosity of logs;</li>
+</ul><h2>
 <a name="troubleshooting-geolocation" class="anchor" href="#troubleshooting-geolocation"><span class="octicon octicon-link"></span></a>Troubleshooting GeoLocation</h2>
 
-<p>On my Keon, geolocation seems very inaccurate. So I added the ability to select current location on a card with a custom Web Activity. To use it, you need to install another application which implements <code>clochix.geoloc</code> Web Activity (see my <a href="https://github.com/clochix/hereIam">hereIam</a> application) and check the "Ask" radio button. In this mode, monitoring of position changes is currently disabled;</p>
+<p>On my Keon, geolocation seems very inaccurate. So I added the ability to select current location on a map with a custom Web Activity. To use it, you need to install another application which implements <code>clochix.geoloc</code> Web Activity (see my <a href="https://github.com/clochix/hereIam">hereIam</a> application) and check the "Ask" radio button. In this mode, monitoring of position changes is currently disabled;</p>
         </section>
 
         <footer>
