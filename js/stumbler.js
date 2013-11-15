@@ -223,7 +223,7 @@ function getWifiInfos(cb) {
       onWifiInfos(networks);
     };
     request.onerror = function (err) {
-      utils.log('[wifi] Something goes wrong: ' + err, "error");
+      utils.log('[wifi] Something goes wrong: ' + request.error.name, "error");
       onWifiInfos(networks);
     };
   } catch (e) {

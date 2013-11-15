@@ -1,10 +1,15 @@
 # FxStumbler
 
-Firefox OS Stumbler for Mozilla [http://location.services.mozilla.com](http://location.services.mozilla.com).
+Firefox OS client for [Mozilla Location Service](http://location.services.mozilla.com).
 
 This application uses phone APIs only available to certified apps for the moment ([WifiManager](https://developer.mozilla.org/en-US/docs/Web/API/WifiManager), [MobileConnection](https://developer.mozilla.org/en-US/docs/Web/API/MozMobileConnection)) . So you can only install it on a developer phone. You need to [enable remote debugging](https://developer.mozilla.org/en-US/docs/Mozilla/Firefox_OS/Debugging/Developer_settings#Remote_debugging) on your phone.
 
 To push the application to the phone, you can use the [Firefox OS Simulator](https://developer.mozilla.org/en-US/docs/Tools/Firefox_OS_Simulator#Push_to_device) or the [App Manager](https://developer.mozilla.org/en-US/docs/Mozilla/Firefox_OS/Using_the_App_Manager).
+
+When cloning the repository, don’t forget to update submodules:
+
+    git submodules init
+    git submodules update
 
 ** Current status of debugging certified applications **
 
