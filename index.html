@@ -7,15 +7,15 @@
     <title>FxStumbler</title>
     <script defer src="js/stumbler.js"></script>
     <script defer src="lib/localForage/lib/async_storage.js"></script>
+    <link rel='stylesheet' href='style/form.css' type='text/css' />
     <link rel='stylesheet' href='style/stumbler.css' type='text/css' />
   </head>
   <body class="">
     <h1>FxStumbler</h1>
     <section>
-      <button type="button" id="mobile">Push infos</button>
+      <button type="button" id="mobile">Get infos</button>
       <button type="button" id="monitor" data-state="stopped">Start monitoring</button>
-      <button type="button" id="search" >Get my position</button>
-      <button type="button" id="clearLogs">Clear logs</button>
+      <button type="button" id="search" class="hidden">Get my position</button>
     </section>
     <h2 data-target="storage">Storage (<span id="nbItems"></span> items)</h2>
     <section id="storage" class="hidden">
@@ -39,20 +39,44 @@
       <p>
         <label for="username">Username: <input type="text" name="username" /></label>
       </p>
-      <p><label>High Accuracy <input type="checkbox" checked id="geoAccur"/></label></p>
-      <p><label>Timeout <input type="text" value="60000" id="geoTo"/></label></p>
-      <p><label>Maximum age <input type="text" value="0" id="geoMax"/></label></p>
-      <p id="settingsLoglevel">
-        <span>Log level</span>
-        <label><input type="radio" name="loglevel" value="info" checked/>Info</label>
-        <label><input type="radio" name="loglevel" value="error" />Errors only</label>
-        <label><input type="radio" name="loglevel" value="debug" />Debug</label>
+      <fieldset>
+        <legend>Log level</legend>
+        <fieldset class="inline text">
+          <select id="settingsLogLevel">
+            <option value="debug">Debug</option>
+            <option value="info">Info</option>
+            <option value="warning">Warning</option>
+            <option value="error">Error</option>
+          </select>
+        </fieldset>
+      </fieldset>
+      <fieldset>
+        <legend>Ignore if less accurate than</legend>
+        <p>
+          <input id="accuracy" type="range" min="5" max="200" step="5" value="50" />
+          <span id="accuracyValue"></span>m
+        </p>
+      </fieldset>
+      <fieldset>
+        <legend>Minimum distance between measures</legend>
+        <p>
+          <input id="delta" type="range" min="1" max="50" step="1" value="10" />
+          <span id="deltaValue"></span>m
+        </p>
+      </fieldset>
+      <h3 data-target="optionsGeoloc">Geoloc</h3>
+      <section id="optionsGeoloc" class="hidden">
+        <p><label>High Accuracy <input type="checkbox" checked id="geoAccur"/></label></p>
+        <p><label>Timeout <input type="text" value="60000" id="geoTo"/></label></p>
+        <p><label>Maximum age <input type="text" value="0" id="geoMax"/></label></p>
+      </section>
+    </section>
+    <h2 data-target="logs">Logs</h2>
+    <section id="logs" class="hidden">
+      <button type="button" id="clearLogs">Clear logs</button>
+      <p>
+        <pre id="result"></pre>
       </p>
     </section>
-    <section>
-    </section>
-    <p>
-      <pre id="result"></pre>
-    </p>
   </body>
 </html>

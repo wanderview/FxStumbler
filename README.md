@@ -42,9 +42,19 @@ Collected information can by stored in a local database and sent to the server l
  - *Geoloc*: how to get current location: GPS or by using another app;
  - *Action*: send data immediately, store them in local database or do nothing;
  - *Username*: if you want your name in the [hall of fame](https://location.services.mozilla.com/leaders);
- - *High accuracy, timeout and maximum age*: finetune [geolocation options](https://developer.mozilla.org/en-US/docs/Web/API/PositionOptions);
+ - geoloc: allow to fine tune [geolocation options](https://developer.mozilla.org/en-US/docs/Web/API/PositionOptions);
+ - min accuracy: data will be ignored if accuracy of geoloc is more than this value (aka if geoloc is not accurate enough);
+ - min distance: when watching position change, will only store new data if distance from previous measure is more than this value, in meter, or if accuracy is 20% better;
  - *Log level*: verbosity of logs;
 
 ## Troubleshooting GeoLocation
 
 On my Keon, geolocation seems very inaccurate. So I added the ability to select current location on a map with a custom Web Activity. To use it, you need to install another application which implements `clochix.geoloc` Web Activity (see my [hereIam](https://github.com/clochix/hereIam) application) and check the "Ask" radio button. In this mode, monitoring of position changes is currently disabled;
+
+## Release notes
+
+* [2014-01-19]
+  - use bigger buttons;
+  - add options: minimal accuracy and minimal distance between 2 measures;
+  - options should be saved;
+  - logs are now hidden by default;

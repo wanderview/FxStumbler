@@ -6,8 +6,18 @@ var result,
     items = [],
     item,
     nbItems,
-    curPos = {},  // Current Geoloc
-    curCell;      // Current Cell Id
+    curPos,
+    curCell,
+    options;
+options = {
+  geoloc: 'GPS',
+  action: 'send',
+  logLevel: 'debug',
+  accuracy: 50,
+  delta: 10,
+  username: ''
+};
+function $$(sel, root) {  "use strict"; root = root || document; return [].slice.call(root.querySelectorAll(sel)); }
 var utils = {
   format:  function format(str) {
     "use strict";
@@ -21,7 +31,14 @@ var utils = {
     var args     = Array.prototype.slice.call(arguments),
         level    = args.pop(),
         levelNum = utils.logLevels.indexOf(level),
-        message;
+        message,
+        res;
+
+    function getDate() {
+      var d = new Date();
+      d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+      return d.toISOString().substr(11, 8);
+    }
     if (levelNum === -1) {
       console.log("Unknown log level " + level);
     }
@@ -34,7 +51,9 @@ var utils = {
       } else {
         message = utils.format.apply(null, args);
       }
-      result.innerHTML += utils.format('<span class="%s">[%s][%s]</span> %s\n', level, new Date().toISOString().substr(11, 8), level, message);
+      res = result.innerHTML.split("\n").slice(0, 100);
+      res.unshift(utils.format('<span class="%s">[%s][%s]</span> %s', level, getDate(), level, message));
+      result.innerHTML = res.join("\n");
     }
   }
 };
@@ -241,9 +260,13 @@ function onGeolocSuccess(pos) {
     item.lat      = pos.coords.latitude;
     item.lon      = pos.coords.longitude;
     item.accuracy = pos.coords.accuracy;
-    utils.log("[geoloc] Done: %s / %s / %s", item.lat, item.lon, item.accuracy, "info");
+    utils.log("[geoloc] Done: %s / %s / %s", item.accuracy, item.lat, item.lon, "info");
 
-    getWifiInfos(onInfosCollected);
+    if (item.accuracy > options.accuracy) {
+      utils.log("[geoloc] Not accurate : " + item.accuracy, "error");
+    } else {
+      getWifiInfos(onInfosCollected);
+    }
   } catch (e) {
     utils.log("[geoloc] Error in onGeolocSuccess: " + pos, "error");
   }
@@ -302,13 +325,38 @@ function onVoiceChange() {
 }
 function onPosChange(pos) {
   "use strict";
+  function distance(p1, p2) {
+    function rad(r) { return r * Math.PI / 180; }
+    var R    = 6371, // Radius of the earth in km
+        dLat = rad(p2.latitude - p1.latitude),
+        dLon = rad(p2.longitude - p1.longitude),
+        a    = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+               Math.cos(rad(p1.latitude)) * Math.cos(rad(p2.latitude)) *
+               Math.sin(dLon / 2) * Math.sin(dLon / 2),
+        c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)),
+        d = R * c * 1000; // Distance in m
+    return d;
+  }
   try {
-    if (curPos.latitude !== pos.coords.latitude || curPos.longitude !== pos.coords.longitude || curPos.accuracy !== pos.coords.accuracy) {
-      utils.log("[geoloc] New position:" + pos.coords.latitude + "/" + pos.coords.longitude + "/" + pos.coords.accuracy, "info");
+    if (typeof curPos === 'undefined') {
+      curPos = {};
       curPos.latitude  = pos.coords.latitude;
       curPos.longitude = pos.coords.longitude;
       curPos.accuracy  = pos.coords.accuracy;
-      onGeolocSuccess(pos);
+    }
+    var delta = distance(curPos, pos.coords);
+    if (delta < parseInt(options.distance, 10) || pos.coords.accuracy < 0.8 * curPos.accuracy) {
+      utils.log("[geoloc] New position:" + pos.coords.accuracy + "/" + pos.coords.latitude + "/" + pos.coords.longitude, "info");
+      curPos.latitude  = pos.coords.latitude;
+      curPos.longitude = pos.coords.longitude;
+      curPos.accuracy  = pos.coords.accuracy;
+      if (curPos.accuracy > options.accuracy) {
+        utils.log("[geoloc] Not accurate : " + curPos.accuracy, "error");
+      } else {
+        onGeolocSuccess(pos);
+      }
+    } else {
+      utils.log("[geoloc] Difference too small : " + delta, "debug");
     }
   } catch (e) {
     utils.log("Error in onPosChange: " + e, "error");
@@ -340,6 +388,22 @@ function stopMonitoring() {
 }
 window.addEventListener("load", function () {
   "use strict";
+  //jshint maxstatements: 30
+  var onAccuracyChange, onDeltaChange;
+  function onSliderChange(option, target) {
+    var fct = function (event) {
+      if (event) {
+        options[option] = event.target.value;
+        document.getElementById(target).textContent = event.target.value;
+      } else {
+        document.getElementById(target).textContent = options[option];
+      }
+    };
+    return fct;
+  }
+  function saveOptions() {
+    asyncStorage.setItem('options', options);
+  }
   try {
     result  = document.getElementById("result");
     nbItems = document.getElementById("nbItems");
@@ -447,10 +511,71 @@ window.addEventListener("load", function () {
       }
       return false;
     });
-    document.getElementById('settingsLoglevel').addEventListener('click', function (event) {
-      utils.logLevel = document.querySelector('[name=loglevel]:checked').value;
+    document.getElementById('settingsLogLevel').addEventListener('change', function (event) {
+      utils.logLevel   = this.value;
+      options.logLevel = this.value;
+      saveOptions();
     });
-    utils.logLevel = document.querySelector('[name=loglevel]:checked').value;
+    utils.logLevel = document.getElementById('settingsLogLevel').value;
+
+    onAccuracyChange = onSliderChange('accuracy', 'accuracyValue');
+    document.getElementById('accuracy').addEventListener('input', onAccuracyChange);
+    document.getElementById('accuracy').addEventListener('change', onAccuracyChange);
+    document.getElementById('accuracy').addEventListener('change', saveOptions);
+
+    onDeltaChange = onSliderChange('delta', 'deltaValue');
+    document.getElementById('delta').addEventListener('input', onDeltaChange);
+    document.getElementById('delta').addEventListener('change', onDeltaChange);
+    document.getElementById('delta').addEventListener('change', saveOptions);
+
+    $$("[name=geoloc]").forEach(function (e) {
+      e.addEventListener('change', function () {
+        if (this.checked) {
+          options.geoloc = this.value;
+          saveOptions();
+        }
+      });
+    });
+    $$("[name=action]").forEach(function (e) {
+      e.addEventListener('change', function () {
+        if (this.checked) {
+          options.action = this.value;
+          saveOptions();
+        }
+      });
+    });
+
+    asyncStorage.getItem('options', function (val) {
+      if (val) {
+        // Default values
+        options.accuracy = val.accuracy || 50;
+        options.action   = val.action   || 'store';
+        options.delta    = val.accuracy || 10;
+        options.geoloc   = val.geoloc   || 'GPS';
+        options.logLevel = val.logLevel || 'debug';
+        options.username = val.username || '';
+      } else {
+        options.accuracy = 50;
+        options.action   = 'store';
+        options.delta    = 10;
+        options.geoloc   = 'GPS';
+        options.logLevel = 'debug';
+        options.username = '';
+      }
+      // Init options
+      onAccuracyChange();
+      onDeltaChange();
+      utils.logLevel = options.logLevel;
+      document.getElementById('settingsLogLevel').value = options.logLevel;
+      document.querySelector("[name=username]").value = options.username;
+      $$("[name=geoloc]").forEach(function (e) {
+        e.checked = (e.value === options.geoloc);
+      });
+      $$("[name=action]").forEach(function (e) {
+        e.checked = (e.value === options.action);
+      });
+    });
+
     try {
       asyncStorage.getItem('items', function (value) {
         if (value === null) {
@@ -468,7 +593,8 @@ window.addEventListener("load", function () {
       utils.log("Error in displayStorage: " + e, "error");
     }
   } catch (e) {
-    utils.log(e, "error");
+    console.log(e);
+    utils.log(e.toString(), "error");
   }
 });
 // {{ Create Mock
@@ -519,7 +645,6 @@ function createMock() {
           }
         }
       };
-      console.log(self);
       self.onsuccess.call(res);
     }, 500);
   };
