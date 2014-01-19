@@ -34,11 +34,17 @@
           <h1>
 <a name="fxstumbler" class="anchor" href="#fxstumbler"><span class="octicon octicon-link"></span></a>FxStumbler</h1>
 
-<p>Firefox OS Client for <a href="http://location.services.mozilla.com">Mozilla Location Service</a>.</p>
+<p>Firefox OS client for <a href="http://location.services.mozilla.com">Mozilla Location Service</a>.</p>
 
 <p>This application uses phone APIs only available to certified apps for the moment (<a href="https://developer.mozilla.org/en-US/docs/Web/API/WifiManager">WifiManager</a>, <a href="https://developer.mozilla.org/en-US/docs/Web/API/MozMobileConnection">MobileConnection</a>) . So you can only install it on a developer phone. You need to <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Firefox_OS/Debugging/Developer_settings#Remote_debugging">enable remote debugging</a> on your phone.</p>
 
 <p>To push the application to the phone, you can use the <a href="https://developer.mozilla.org/en-US/docs/Tools/Firefox_OS_Simulator#Push_to_device">Firefox OS Simulator</a> or the <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Firefox_OS/Using_the_App_Manager">App Manager</a>.</p>
+
+<p>When cloning the repository, don’t forget to update submodules:</p>
+
+<pre><code>git submodules init
+git submodules update
+</code></pre>
 
 <p>** Current status of debugging certified applications **</p>
 
@@ -84,14 +90,30 @@
 <em>Action</em>: send data immediately, store them in local database or do nothing;</li>
 <li>
 <em>Username</em>: if you want your name in the <a href="https://location.services.mozilla.com/leaders">hall of fame</a>;</li>
-<li>
-<em>High accuracy, timeout and maximum age</em>: finetune <a href="https://developer.mozilla.org/en-US/docs/Web/API/PositionOptions">geolocation options</a>;</li>
+<li>geoloc: allow to fine tune <a href="https://developer.mozilla.org/en-US/docs/Web/API/PositionOptions">geolocation options</a>;</li>
+<li>min accuracy: data will be ignored if accuracy of geoloc is more than this value (aka if geoloc is not accurate enough);</li>
+<li>min distance: when watching position change, will only store new data if distance from previous measure is more than this value, in meter, or if accuracy is 20% better;</li>
 <li>
 <em>Log level</em>: verbosity of logs;</li>
 </ul><h2>
 <a name="troubleshooting-geolocation" class="anchor" href="#troubleshooting-geolocation"><span class="octicon octicon-link"></span></a>Troubleshooting GeoLocation</h2>
 
 <p>On my Keon, geolocation seems very inaccurate. So I added the ability to select current location on a map with a custom Web Activity. To use it, you need to install another application which implements <code>clochix.geoloc</code> Web Activity (see my <a href="https://github.com/clochix/hereIam">hereIam</a> application) and check the "Ask" radio button. In this mode, monitoring of position changes is currently disabled;</p>
+
+<h2>
+<a name="release-notes" class="anchor" href="#release-notes"><span class="octicon octicon-link"></span></a>Release notes</h2>
+
+<ul>
+<li>[2014-01-19]
+
+<ul>
+<li>use bigger buttons;</li>
+<li>add options: minimal accuracy and minimal distance between 2 measures;</li>
+<li>options should be saved;</li>
+<li>logs are now hidden by default;</li>
+</ul>
+</li>
+</ul>
         </section>
 
         <footer>
