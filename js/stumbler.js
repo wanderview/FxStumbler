@@ -345,7 +345,7 @@ function onPosChange(pos) {
       curPos.accuracy  = pos.coords.accuracy;
     }
     var delta = distance(curPos, pos.coords);
-    if (delta < parseInt(options.distance, 10) || pos.coords.accuracy < 0.8 * curPos.accuracy) {
+    if (delta > parseInt(options.delta, 10) || pos.coords.accuracy < 0.8 * curPos.accuracy) {
       utils.log("[geoloc] New position:" + pos.coords.accuracy + "/" + pos.coords.latitude + "/" + pos.coords.longitude, "info");
       curPos.latitude  = pos.coords.latitude;
       curPos.longitude = pos.coords.longitude;
