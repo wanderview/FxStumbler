@@ -8,11 +8,13 @@ var result,
     nbItems,
     curPos,
     curCell,
-    options;
+    options,
+    _;
 options = {
   geoloc: 'GPS',
   action: 'send',
   logLevel: 'debug',
+  lang: 'en-US',
   accuracy: 50,
   delta: 10,
   username: ''
@@ -390,6 +392,7 @@ window.addEventListener("load", function () {
   "use strict";
   //jshint maxstatements: 30
   var onAccuracyChange, onDeltaChange;
+  _ = document.webL10n.get;
   function onSliderChange(option, target) {
     var fct = function (event) {
       if (event) {
@@ -421,11 +424,11 @@ window.addEventListener("load", function () {
       if (this.dataset.state === 'stopped') {
         startMonitoring();
         this.dataset.state = "started";
-        this.textContent   = "Stop monitoring";
+        this.textContent   = _('monitoringStop');
       } else {
         stopMonitoring();
         this.dataset.state = "stopped";
-        this.textContent   = "Start monitoring";
+        this.textContent   = _('monitoringStart');
       }
     });
     document.getElementById('clearLogs').addEventListener('click', function (event) {
@@ -516,7 +519,13 @@ window.addEventListener("load", function () {
       options.logLevel = this.value;
       saveOptions();
     });
+    document.getElementById('settingsLang').addEventListener('change', function (event) {
+      options.lang = this.value;
+      document.webL10n.setLanguage(this.value);
+      saveOptions();
+    });
     utils.logLevel = document.getElementById('settingsLogLevel').value;
+    document.webL10n.setLanguage(document.getElementById('settingsLang').value);
 
     onAccuracyChange = onSliderChange('accuracy', 'accuracyValue');
     document.getElementById('accuracy').addEventListener('input', onAccuracyChange);
@@ -553,6 +562,7 @@ window.addEventListener("load", function () {
         options.delta    = val.accuracy || 10;
         options.geoloc   = val.geoloc   || 'GPS';
         options.logLevel = val.logLevel || 'debug';
+        options.lang     = val.lang     || 'en-US';
         options.username = val.username || '';
       } else {
         options.accuracy = 50;
@@ -560,13 +570,16 @@ window.addEventListener("load", function () {
         options.delta    = 10;
         options.geoloc   = 'GPS';
         options.logLevel = 'debug';
+        options.lang     = 'en-US';
         options.username = '';
       }
       // Init options
       onAccuracyChange();
       onDeltaChange();
       utils.logLevel = options.logLevel;
+      document.webL10n.setLanguage(options.lang);
       document.getElementById('settingsLogLevel').value = options.logLevel;
+      document.getElementById('settingsLang').value = options.lang;
       document.querySelector("[name=username]").value = options.username;
       $$("[name=geoloc]").forEach(function (e) {
         e.checked = (e.value === options.geoloc);

@@ -6,74 +6,85 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FxStumbler</title>
     <script defer src="js/stumbler.js"></script>
-    <script defer src="lib/localForage/lib/async_storage.js"></script>
+    <script defer src="lib/localForage/dist/localForage.js"></script>
+    <script defer src="lib/webL10n/l10n.js"></script>
     <link rel='stylesheet' href='style/form.css' type='text/css' />
     <link rel='stylesheet' href='style/stumbler.css' type='text/css' />
+    <link rel="prefetch" type="application/l10n" href="locales/locales.ini" />
   </head>
   <body class="">
     <h1>FxStumbler</h1>
     <section>
-      <button type="button" id="mobile">Get infos</button>
-      <button type="button" id="monitor" data-state="stopped">Start monitoring</button>
-      <button type="button" id="search" class="hidden">Get my position</button>
+      <button type="button" id="mobile" data-l10n-id="getInfos">Get infos</button>
+      <button type="button" id="monitor" data-state="stopped" data-l10n-id="monitoringStart">Start monitoring</button>
+      <button type="button" id="search" class="hidden" data-l10n-id="getPosition">Get my position</button>
     </section>
-    <h2 data-target="storage">Storage (<span id="nbItems"></span> items)</h2>
+    <h2 data-target="storage"><span data-l10n-id="storageTitle">Storage</span> (<span id="nbItems"></span> <span data-l10n-id="storageTitleEnd">items</span>)</h2>
     <section id="storage" class="hidden">
-      <button type="button" id="displayStorage">Display</button>
-      <button type="button" id="sendStorage">Send</button>
-      <button type="button" id="clearStorage">Clear</button>
+      <button type="button" id="displayStorage" data-l10n-id="storageDisplay">Display</button>
+      <button type="button" id="sendStorage" data-l10n-id="storageSend">Send</button>
+      <button type="button" id="clearStorage" data-l10n-id="storageClear">Clear</button>
     </section>
-    <h2 data-target="options">Options</h2>
+    <h2 data-target="options" data-l10n-id="options">Options</h2>
     <section id="options" class="hidden">
       <p>
-        Geoloc:
-        <label><input type="radio" name="geoloc" value="GPS" checked/>GPS</label>
-        <label><input type="radio" name="geoloc" value="Ask" />Ask</label>
+        <span data-l10n-id="geolocType">Geoloc:</span>
+        <label><input type="radio" name="geoloc" value="GPS" checked /><span data-l10n-id="geolocGps"/>GPS</span></label>
+        <label><input type="radio" name="geoloc" value="Ask" /><span data-l10n-id="geolocAsk"/>Ask</span></label>
       </p>
       <p>
-        Action:
-        <label><input type="radio" name="action" value="send" checked/>Send</label>
-        <label><input type="radio" name="action" value="store" />Store</label>
-        <label><input type="radio" name="action" value="nothing" />Nothing</label>
+        <span data-l10n-id="action">Action:</span>
+        <label><input type="radio" name="action" value="send" checked /><span data-l10n-id="actionSend"/>Send</span></label>
+        <label><input type="radio" name="action" value="store"  /><span data-l10n-id="actionStore"/>Store</span></label>
+        <label><input type="radio" name="action" value="nothing" /><span data-l10n-id="actionNone"/>Nothing</span></label>
       </p>
       <p>
-        <label for="username">Username: <input type="text" name="username" /></label>
+        <label for="username" data-l10n-id="userName">Username: <input type="text" name="username" /></label>
       </p>
       <fieldset>
-        <legend>Log level</legend>
+        <legend data-l10n-id="logLevel">Log level</legend>
         <fieldset class="inline text">
           <select id="settingsLogLevel">
-            <option value="debug">Debug</option>
-            <option value="info">Info</option>
-            <option value="warning">Warning</option>
-            <option value="error">Error</option>
+            <option value="debug"   data-l10n-id="logLevelDebug">Debug</option>
+            <option value="info"    data-l10n-id="logLevelInfo">Info</option>
+            <option value="warning" data-l10n-id="logLevelWarning">Warning</option>
+            <option value="error"   data-l10n-id="logLevelError">Error</option>
           </select>
         </fieldset>
       </fieldset>
       <fieldset>
-        <legend>Ignore if less accurate than</legend>
+        <legend data-l10n-id="lang">Lang</legend>
+        <fieldset class="inline text">
+          <select id="settingsLang">
+            <option value="en-US" data-l10n-id="langEnglish"></option>
+            <option value="fr"    data-l10n-id="langFrench"></option>
+          </select>
+        </fieldset>
+      </fieldset>
+      <fieldset>
+        <legend data-l10n-id="accuracy">Ignore if less accurate than</legend>
         <p>
           <input id="accuracy" type="range" min="5" max="200" step="5" value="50" />
           <span id="accuracyValue"></span>m
         </p>
       </fieldset>
       <fieldset>
-        <legend>Minimum distance between measures</legend>
+        <legend data-l10n-id="distance">Minimum distance between measures</legend>
         <p>
           <input id="delta" type="range" min="1" max="50" step="1" value="10" />
           <span id="deltaValue"></span>m
         </p>
       </fieldset>
-      <h3 data-target="optionsGeoloc">Geoloc</h3>
+      <h3 data-target="optionsGeoloc" data-l10n-id="geolocOptions">Geoloc</h3>
       <section id="optionsGeoloc" class="hidden">
-        <p><label>High Accuracy <input type="checkbox" checked id="geoAccur"/></label></p>
-        <p><label>Timeout <input type="text" value="60000" id="geoTo"/></label></p>
-        <p><label>Maximum age <input type="text" value="0" id="geoMax"/></label></p>
+        <p><label data-l10n-id="geolocAccuracy">High Accuracy <input type="checkbox" checked id="geoAccur"/></label></p>
+        <p><label data-l10n-id="geolocTimeout">Timeout <input type="text" value="60000" id="geoTo"/></label></p>
+        <p><label data-l10n-id="geolocAge">Maximum age <input type="text" value="0" id="geoMax"/></label></p>
       </section>
     </section>
-    <h2 data-target="logs">Logs</h2>
+    <h2 data-target="logs" data-l10n-id="logs">Logs</h2>
     <section id="logs" class="hidden">
-      <button type="button" id="clearLogs">Clear logs</button>
+      <button type="button" id="clearLogs" data-l10n-id="logsClear">Clear logs</button>
       <p>
         <pre id="result"></pre>
       </p>

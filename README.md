@@ -18,11 +18,7 @@ When cloning the repository, don’t forget to update submodules:
 
 Furthermore, [“the marketplace can not distribute apps that use certified APIs”](https://groups.google.com/forum/#!topic/mozilla.dev.marketplace/vY3Rj3tWXuU). That’s a sad news, because it means that this application will only be available to developers.
 
-To create the package, use 
-
-    rm stumbler.zip && zip -r stumbler.zip index.html js locales manifest.webapp style
-
-Or just `make all`
+To create the package, use `make all`.
 
 ## Usage
 

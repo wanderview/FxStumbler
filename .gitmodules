@@ -1,3 +1,6 @@
 [submodule "lib/localForage"]
 	path = lib/localForage
 	url = https://github.com/mozilla/localForage.git
+[submodule "lib/webL10n"]
+	path = lib/webL10n
+	url = https://github.com/fabi1cazenave/webL10n.git
