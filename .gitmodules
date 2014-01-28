@@ -1,3 +1,0 @@
-[submodule "lib/localForage"]
-	path = lib/localForage
-	url = https://github.com/mozilla/localforage
