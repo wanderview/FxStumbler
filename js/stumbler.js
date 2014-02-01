@@ -1,6 +1,5 @@
 //jshint browser: true
-/*global asyncStorage: true */
-/*exported createMock */
+/*global asyncStorage: true, L */
 (function () {
   "use strict";
   var result,
@@ -12,6 +11,7 @@
       curCell,
       options,
       utils,
+      map,
       _;
   options = {
     geoloc: 'GPS',
@@ -310,7 +310,7 @@
   function onVoiceChange() {
     try {
       var conn = window.navigator.mozMobileConnection;
-      if (conn && conn.voice) {
+      if (conn && conn.voice && conn.voice.cell) {
         if (curCell !== conn.voice.cell.gsmCellId) {
           curCell = conn.voice.cell.gsmCellId;
           utils.log("[cell] New cell: " + curCell, "debug");
@@ -382,7 +382,7 @@
     navigator.geolocation.clearWatch(watchId);
   }
   window.addEventListener("load", function () {
-    //jshint maxstatements: 32
+    //jshint maxstatements: 35
     var onAccuracyChange, onDeltaChange;
     _ = document.webL10n.get;
     function onSliderChange(option, target) {
@@ -404,7 +404,7 @@
       nbItems = document.getElementById("nbItems");
       document.body.addEventListener('click', function (event) {
         var elmt;
-        if (event.target.dataset.target) {
+        if (event.target.dataset && event.target.dataset.target) {
           elmt = document.getElementById(event.target.dataset.target);
           if (elmt) {
             elmt.classList.toggle('hidden');
@@ -460,6 +460,51 @@
         } catch (e) {
           utils.log("Error in displayStorage: " + e, "error");
         }
+        return false;
+      });
+      document.getElementById('displayMap').addEventListener('click', function (event) {
+        event.preventDefault();
+        var tile;
+        try {
+          result.textContent = '';
+          asyncStorage.getItem('items', function (value) {
+            value = JSON.parse(value);
+            if (value === null || (Array.isArray(value) && value.length < 1)) {
+              window.alert("Nothing stored");
+            } else {
+              try {
+                document.getElementById('sectionMain').classList.toggle('hidden');
+                document.getElementById('sectionMap').classList.toggle('hidden');
+                map.setView([value[0].lat, value[0].lon], 14);
+                tile = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>', maxZoom: 18});
+                tile.addTo(map);
+                value.forEach(function (v) {
+                  var circle = L.circle([v.lat, v.lon], v.accuracy, {
+                    color: 'red',
+                    fillColor: '#f03',
+                    fillOpacity: 0.5
+                  }).addTo(map);
+                  circle.bindPopup(v.wifi.length + " wifi networks");
+                  circle.on("click", function () {
+                    circle.openPopup();
+                  });
+                });
+                // Force map redraw
+                map._onResize();
+              } catch (e) {
+                utils.log("Error retrieving stored items: " + e, "error");
+              }
+            }
+          });
+        } catch (e) {
+          utils.log("Error in displayStorage: " + e, "error");
+        }
+        return false;
+      });
+      document.getElementById('mapBack').addEventListener('click', function (event) {
+        event.preventDefault();
+        document.getElementById('sectionMain').classList.toggle('hidden');
+        document.getElementById('sectionMap').classList.toggle('hidden');
         return false;
       });
       document.getElementById('sendStorage').addEventListener('click', function (event) {
@@ -601,6 +646,8 @@
       console.log(e);
       utils.log(e.toString(), "error");
     }
+    // Map
+    map = L.map('map');
   });
 
 }());
@@ -656,5 +703,8 @@ function createMock() {
       self.onsuccess.call(res);
     }, 500);
   };
+}
+if (typeof navigator.mozWifiManager === 'undefined' && typeof navigator.mozMobileConnection === 'undefined' && typeof window.MozActivity === 'undefined') {
+  createMock();
 }
 // }}
