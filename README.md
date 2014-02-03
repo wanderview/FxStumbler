@@ -2,34 +2,35 @@
 
 Firefox OS client for [Mozilla Location Service](http://location.services.mozilla.com).
 
-This application uses phone APIs only available to certified apps for the moment ([WifiManager](https://developer.mozilla.org/en-US/docs/Web/API/WifiManager), [MobileConnection](https://developer.mozilla.org/en-US/docs/Web/API/MozMobileConnection)) . So you can only install it on a developer phone. You need to [enable remote debugging](https://developer.mozilla.org/en-US/docs/Mozilla/Firefox_OS/Debugging/Developer_settings#Remote_debugging) on your phone.
+This application uses phone APIs only available to certified apps for the moment ([WifiManager](https://developer.mozilla.org/en-US/docs/Web/API/WifiManager), [MobileConnection](https://developer.mozilla.org/en-US/docs/Web/API/MozMobileConnection)). And [“the marketplace can not distribute apps that use certified APIs”](https://groups.google.com/forum/#!topic/mozilla.dev.marketplace/vY3Rj3tWXuU). So you will have to install it by hand on a developer phone.
 
-To push the application to the phone, you can use the [Firefox OS Simulator](https://developer.mozilla.org/en-US/docs/Tools/Firefox_OS_Simulator#Push_to_device) or the [App Manager](https://developer.mozilla.org/en-US/docs/Mozilla/Firefox_OS/Using_the_App_Manager).
+## Install
 
-When cloning the repository, don’t forget to update submodules:
+You can either just download and extract the archive, or clone the repository :
 
-    git submodules init
-    git submodules update
+    mkdir FxStumbler
+    cd FxStumbler
+    curl -O https://github.com/clochix/FxStumbler/raw/master/stumbler.zip
+    unzip stumbler.zip
 
-** Current status of debugging certified applications **
+Or
 
- - Simulator seems [broken with 1.2 and 1.3](https://bugzilla.mozilla.org/show_bug.cgi?id=928527) so you won’t be able to use it to push the application to your device ;
- - to use the new App Manager, you need a [development build of Firefox OS 1.2](https://developer.mozilla.org/fr/docs/Mozilla/Firefox_OS/Using_the_App_Manager#Debugging_Certified_Apps) ;
+    git clone https://github.com/clochix/FxStumbler
+    make all
 
-Furthermore, [“the marketplace can not distribute apps that use certified APIs”](https://groups.google.com/forum/#!topic/mozilla.dev.marketplace/vY3Rj3tWXuU). That’s a sad news, because it means that this application will only be available to developers.
+Then create a new packaged app into the [App Manager](https://developer.mozilla.org/en-US/docs/Mozilla/Firefox_OS/Using_the_App_Manager), and install the application on your phone. If you haven’t yet, don’t forget to [enable remote debugging](https://developer.mozilla.org/en-US/docs/Mozilla/Firefox_OS/Debugging/Developer_settings#Remote_debugging) on your phone.
 
-To create the package, use `make all`.
 
 ## Usage
 
 ### Main actions
 
- - *Push infos*: get current location, cell and Wifi informations and perform the action selected in the options (default is to push to the Web service);
+ - *Get infos*: get current location, cell and Wifi informations and perform the action selected in the options (default is to push to the Web service);
  - *Start Monitoring*: perform the above action every time location or mobile cell information change;
  - *Get my position* query the Web service to get current position according to mobile cells and wifi networks nearby;
  - *Clear log*: clear the log window;
 
-### Storage options
+### Storage
 
 Collected information can by stored in a local database and sent to the server later. You can display the full content of the database (warning, a huge JSON array), send it or clear all records.
 
@@ -48,6 +49,12 @@ Collected information can by stored in a local database and sent to the server l
 On my Keon, geolocation seems very inaccurate. So I added the ability to select current location on a map with a custom Web Activity. To use it, you need to install another application which implements `clochix.geoloc` Web Activity (see my [hereIam](https://github.com/clochix/hereIam) application) and check the "Ask" radio button. In this mode, monitoring of position changes is currently disabled;
 
 ## Release notes
+
+* [2014-02-03]
+  - add some statistics
+
+* [2014-02-01]
+  - allow to display data in storage on a map
 
 * [2014-01-19]
   - use bigger buttons;

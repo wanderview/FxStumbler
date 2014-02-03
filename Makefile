@@ -39,7 +39,7 @@ endif
 
 zip: 
 	rm -f stumbler.zip
-	zip -r stumbler.zip index.html js build locales manifest.webapp
+	zip -r stumbler.zip index.html js build locales manifest.webapp icons package.manifest
 
 watch:  
 	while true; do inotifywait -e close_write,moved_to,create,modify $(js) $(css) ; make debug; done
