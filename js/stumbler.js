@@ -321,19 +321,19 @@
       utils.log("Error in onVoiceChange: " + e, "error");
     }
   }
+  function distance(p1, p2) {
+    function rad(r) { return r * Math.PI / 180; }
+    var R    = 6371, // Radius of the earth in km
+        dLat = rad(p2.latitude - p1.latitude),
+        dLon = rad(p2.longitude - p1.longitude),
+        a    = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+               Math.cos(rad(p1.latitude)) * Math.cos(rad(p2.latitude)) *
+               Math.sin(dLon / 2) * Math.sin(dLon / 2),
+        c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)),
+        d = R * c * 1000; // Distance in m
+    return d;
+  }
   function onPosChange(pos) {
-    function distance(p1, p2) {
-      function rad(r) { return r * Math.PI / 180; }
-      var R    = 6371, // Radius of the earth in km
-          dLat = rad(p2.latitude - p1.latitude),
-          dLon = rad(p2.longitude - p1.longitude),
-          a    = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                 Math.cos(rad(p1.latitude)) * Math.cos(rad(p2.latitude)) *
-                 Math.sin(dLon / 2) * Math.sin(dLon / 2),
-          c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)),
-          d = R * c * 1000; // Distance in m
-      return d;
-    }
     try {
       if (typeof curPos === 'undefined') {
         curPos = {};
@@ -382,7 +382,7 @@
     navigator.geolocation.clearWatch(watchId);
   }
   window.addEventListener("load", function () {
-    //jshint maxstatements: 35
+    //jshint maxstatements: 40
     var onAccuracyChange, onDeltaChange;
     _ = document.webL10n.get;
     function onSliderChange(option, target) {
@@ -441,6 +441,7 @@
       });
       document.getElementById('displayStorage').addEventListener('click', function (event) {
         event.preventDefault();
+        var logs;
         try {
           result.textContent = '';
           asyncStorage.getItem('items', function (value) {
@@ -452,6 +453,9 @@
                 value = JSON.parse(value);
                 utils.log("Number of items: " + value.length, "info");
                 utils.log(value, "info");
+                logs = document.getElementById('logs');
+                logs.classList.remove('hidden');
+                logs.scrollIntoView();
               } catch (e) {
                 utils.log("Error retrieving stored items: " + e, "error");
               }
@@ -492,12 +496,67 @@
                 // Force map redraw
                 map._onResize();
               } catch (e) {
-                utils.log("Error retrieving stored items: " + e, "error");
+                utils.log("Error displaying map: " + e, "error");
               }
             }
           });
         } catch (e) {
-          utils.log("Error in displayStorage: " + e, "error");
+          utils.log("Error in displayMap: " + e, "error");
+        }
+        return false;
+      });
+      document.getElementById('displayStats').addEventListener('click', function (event) {
+        event.preventDefault();
+        var dist = 0, wifi = {}, cells = {}, curPos, prevPos, logs;
+        try {
+          result.textContent = '';
+          asyncStorage.getItem('items', function (value) {
+            value = JSON.parse(value);
+            if (value === null || (Array.isArray(value) && value.length < 1)) {
+              window.alert("Nothing stored");
+            } else {
+              try {
+                value.forEach(function (v) {
+                  v.cell.forEach(function (c) {
+                    if (c.cid) {
+                      cells[c.cid.toString()] = true;
+                    }
+                  });
+                  v.wifi.forEach(function (c) {
+                    if (c.key) {
+                      wifi[c.key] = true;
+                    }
+                  });
+                  if (typeof prevPos === 'undefined') {
+                    prevPos = {
+                      latitude: v.lat,
+                      longitude: v.lon
+                    };
+                  } else {
+                    curPos = {
+                      latitude: v.lat,
+                      longitude: v.lon
+                    };
+                    dist += distance(prevPos, curPos);
+                    prevPos = {
+                      latitude: v.lat,
+                      longitude: v.lon
+                    };
+                  }
+                });
+                utils.log("[stats] " + Object.keys(wifi).length + " wifi networks", "info");
+                utils.log("[stats] " + Object.keys(cells).length + " cells", "info");
+                utils.log("[stats] " + dist + "m", "info");
+                logs = document.getElementById('logs');
+                logs.classList.remove('hidden');
+                logs.scrollIntoView();
+              } catch (e) {
+                utils.log("Error compiling stats stored items: " + e, "error");
+              }
+            }
+          });
+        } catch (e) {
+          utils.log("Error in displayStats: " + e, "error");
         }
         return false;
       });

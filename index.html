@@ -11,16 +11,17 @@
   </head>
   <body class="">
     <section id="sectionMain">
-      <h1>FxStumbler</h1>
-      <section>
+      <h1 data-target="main">FxStumbler</h1>
+      <section id="main">
         <button type="button" id="mobile" data-l10n-id="getInfos">Get infos</button>
         <button type="button" id="monitor" data-state="stopped" data-l10n-id="monitoringStart">Start monitoring</button>
-        <button type="button" id="search" class="hidden" data-l10n-id="getPosition">Get my position</button>
+        <button type="button" id="search" data-l10n-id="getPosition"></button>
       </section>
       <h2 data-target="storage"><span data-l10n-id="storageTitle">Storage</span> (<span id="nbItems"></span> <span data-l10n-id="storageTitleEnd">items</span>)</h2>
       <section id="storage" class="hidden">
         <button type="button" id="displayStorage" data-l10n-id="storageDisplay">Display</button>
         <button type="button" id="displayMap" data-l10n-id="storageDisplayMap">Display on map</button>
+        <button type="button" id="displayStats" data-l10n-id="storageStats"></button>
         <button type="button" id="sendStorage" data-l10n-id="storageSend">Send</button>
         <button type="button" id="clearStorage" data-l10n-id="storageClear">Clear</button>
       </section>
