@@ -1,6 +1,6 @@
 js = lib/leaflet/leaflet.js lib/localForage/dist/localForage.js lib/webL10n/l10n.js js/stumbler.js
 css = style/form.css style/stumbler.css lib/leaflet/leaflet.css
-jscmd := $(shell which -a uglifyjs2)
+jscmd := $(shell which uglifyjs2)
 
 .PHONY: help all build zip watch debug
 
@@ -38,7 +38,7 @@ else
 endif
 
 zip: 
-	rm stumbler.zip
+	rm -f stumbler.zip
 	zip -r stumbler.zip index.html js build locales manifest.webapp
 
 watch:  
