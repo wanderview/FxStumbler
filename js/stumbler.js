@@ -655,7 +655,7 @@
           // Default values
           options.accuracy = val.accuracy || 50;
           options.action   = val.action   || 'store';
-          options.delta    = val.accuracy || 10;
+          options.delta    = val.delta    || 10;
           options.geoloc   = val.geoloc   || 'GPS';
           options.logLevel = val.logLevel || 'debug';
           options.lang     = val.lang     || 'en-US';
