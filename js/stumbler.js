@@ -1,6 +1,7 @@
 //jshint browser: true
 /*global asyncStorage: true, L */
 (function () {
+  //jshint maxstatements: 31
   "use strict";
   var result,
       watchId,
@@ -468,7 +469,14 @@
       });
       document.getElementById('displayMap').addEventListener('click', function (event) {
         event.preventDefault();
-        var tile;
+        var tile, group, markers = [];
+        group = L.markerClusterGroup({
+          showCoverageOnHover: false,
+          spiderfyOnMaxZoom: true,
+          removeOutsideVisibleBounds: true,
+          disableClusteringAtZoom: 18
+        });
+        L.Icon.Default.imagePath = 'lib/leaflet/images';
         try {
           result.textContent = '';
           asyncStorage.getItem('items', function (value) {
@@ -479,10 +487,11 @@
               try {
                 document.getElementById('sectionMain').classList.toggle('hidden');
                 document.getElementById('sectionMap').classList.toggle('hidden');
-                map.setView([value[0].lat, value[0].lon], 14);
+                map.setView([value[value.length - 1].lat, value[value.length - 1].lon], 14);
                 tile = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>', maxZoom: 18});
                 tile.addTo(map);
                 value.forEach(function (v) {
+                  /*
                   var circle = L.circle([v.lat, v.lon], v.accuracy, {
                     color: 'red',
                     fillColor: '#f03',
@@ -492,7 +501,13 @@
                   circle.on("click", function () {
                     circle.openPopup();
                   });
+                  */
+                  var marker = L.marker(new L.LatLng(v.lat, v.lon));
+                  markers.push(marker);
                 });
+                group.addLayers(markers);
+                map.addLayer(group);
+
                 // Force map redraw
                 map._onResize();
               } catch (e) {
@@ -709,61 +724,61 @@
     map = L.map('map');
   });
 
-}());
-
-// {{ Create Mock
-function createMock() {
-  "use strict";
-  navigator.mozWifiManager = {
-    getNetworks: function () {
-      var res = {};
+  // {{ Create Mock
+  function createMock() {
+    navigator.mozWifiManager = {
+      getNetworks: function () {
+        var res = {};
+        window.setTimeout(function () {
+          var self = {
+            result: [
+              {
+                ssid: '00:00:00:00',
+                signalStrengh: 0
+              }
+            ]
+          };
+          res.onsuccess.call(self);
+        }, 500);
+        return res;
+      }
+    };
+    var info = {
+      'type': 'gsm',
+      'network': {
+        'mcc': 'mcc',
+        'mnc': 'mnc'
+      },
+      'cell': {
+        'gsmLocationAreaCode': '123',
+        'gsmCellId': '456'
+      },
+      'signalStrength': 1
+    };
+    navigator.mozMobileConnection = {
+      data: info,
+      voice: info
+    };
+    window.MozActivity = function (options) {
+      var self = this;
       window.setTimeout(function () {
-        var self = {
-          result: [
-            {
-              ssid: '00:00:00:00',
-              signalStrengh: 0
+        var res = {
+          result: {
+            coords: {
+              latitude: 48.856578 + (Math.random() / 100),
+              longitude: 2.351828 + (Math.random() / 100),
+              accuracy: 50
             }
-          ]
-        };
-        res.onsuccess.call(self);
-      }, 500);
-      return res;
-    }
-  };
-  var info = {
-    'type': 'gsm',
-    'network': {
-      'mcc': 'mcc',
-      'mnc': 'mnc'
-    },
-    'cell': {
-      'gsmLocationAreaCode': '123',
-      'gsmCellId': '456'
-    },
-    'signalStrength': 1
-  };
-  navigator.mozMobileConnection = {
-    data: info,
-    voice: info
-  };
-  window.MozActivity = function (options) {
-    var self = this;
-    window.setTimeout(function () {
-      var res = {
-        result: {
-          coords: {
-            latitude: 48.856578,
-            longitude: 2.351828,
-            accuracy: 500
           }
-        }
-      };
-      self.onsuccess.call(res);
-    }, 500);
-  };
-}
-if (typeof navigator.mozWifiManager === 'undefined' && typeof navigator.mozMobileConnection === 'undefined' && typeof window.MozActivity === 'undefined') {
-  createMock();
-}
-// }}
+        };
+        self.onsuccess.call(res);
+      }, 50);
+    };
+  }
+  if (typeof navigator.mozWifiManager === 'undefined' && typeof navigator.mozMobileConnection === 'undefined' && typeof window.MozActivity === 'undefined') {
+    createMock();
+    window.getGeoloc = getGeoloc;
+  }
+  // }}
+
+}());
