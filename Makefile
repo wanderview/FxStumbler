@@ -1,5 +1,5 @@
-js = lib/leaflet/leaflet.js lib/localForage/dist/localForage.js lib/webL10n/l10n.js js/stumbler.js
-css = style/form.css style/stumbler.css lib/leaflet/leaflet.css
+js = lib/leaflet/leaflet.js lib/localForage/dist/localForage.js lib/webL10n/l10n.js js/stumbler.js lib/cluster/cluster.js
+css = style/form.css style/stumbler.css lib/leaflet/leaflet.css lib/cluster/cluster.css
 jscmd := $(shell which uglifyjs2)
 
 .PHONY: help all build zip watch debug
