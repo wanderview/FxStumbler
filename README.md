@@ -42,6 +42,7 @@ Collected information can by stored in a local database and sent to the server l
  - geoloc: allow to fine tune [geolocation options](https://developer.mozilla.org/en-US/docs/Web/API/PositionOptions);
  - min accuracy: data will be ignored if accuracy of geoloc is more than this value (aka if geoloc is not accurate enough);
  - min distance: when watching position change, will only store new data if distance from previous measure is more than this value, in meter, or if accuracy is 20% better;
+ - map type: displaying hundred of measurements on map may take a lot of time. By choosing *compact*, the markers will be grouped on the map;
  - *Log level*: verbosity of logs;
 
 ## Troubleshooting GeoLocation

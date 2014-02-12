@@ -1,6 +1,7 @@
 //jshint browser: true
 /*global asyncStorage: true, L */
 (function () {
+  //jshint maxstatements: 31
   "use strict";
   var result,
       watchId,
@@ -12,6 +13,7 @@
       options,
       utils,
       map,
+      group,
       _;
   options = {
     geoloc: 'GPS',
@@ -20,6 +22,7 @@
     lang: 'en-US',
     accuracy: 50,
     delta: 10,
+    mapType: 'full',
     username: ''
   };
   function $$(sel, root) {  root = root || document; return [].slice.call(root.querySelectorAll(sel)); }
@@ -468,7 +471,7 @@
       });
       document.getElementById('displayMap').addEventListener('click', function (event) {
         event.preventDefault();
-        var tile;
+        var tile, markers = [];
         try {
           result.textContent = '';
           asyncStorage.getItem('items', function (value) {
@@ -479,20 +482,36 @@
               try {
                 document.getElementById('sectionMain').classList.toggle('hidden');
                 document.getElementById('sectionMap').classList.toggle('hidden');
-                map.setView([value[0].lat, value[0].lon], 14);
+                map.setView([value[value.length - 1].lat, value[value.length - 1].lon], 14);
                 tile = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>', maxZoom: 18});
                 tile.addTo(map);
                 value.forEach(function (v) {
-                  var circle = L.circle([v.lat, v.lon], v.accuracy, {
-                    color: 'red',
-                    fillColor: '#f03',
-                    fillOpacity: 0.5
-                  }).addTo(map);
-                  circle.bindPopup(v.wifi.length + " wifi networks");
-                  circle.on("click", function () {
-                    circle.openPopup();
-                  });
+                  var circle, marker;
+                  if (options.mapType === 'full') {
+                    circle = L.circle([v.lat, v.lon], v.accuracy, {
+                      color: 'red',
+                      fillColor: '#f03',
+                      fillOpacity: 0.5
+                    }).addTo(map);
+                    circle.bindPopup(v.wifi.length + " wifi networks");
+                    circle.on("click", function () {
+                      circle.openPopup();
+                    });
+                  } else {
+                    marker = L.marker(new L.LatLng(v.lat, v.lon));
+                    markers.push(marker);
+                  }
                 });
+                if (options.mapType === 'compact') {
+                  group.clearLayers();
+                  group.addLayers(markers);
+                  map.addLayer(group);
+                } else {
+                  if (map.hasLayer(group)) {
+                    map.removeLayer(group);
+                  }
+                }
+
                 // Force map redraw
                 map._onResize();
               } catch (e) {
@@ -633,24 +652,15 @@
       document.getElementById('delta').addEventListener('change', onDeltaChange);
       document.getElementById('delta').addEventListener('change', saveOptions);
 
-      $$("[name=geoloc]").forEach(function (e) {
-        e.addEventListener('change', function () {
-          if (this.checked) {
-            options.geoloc = this.value;
-            saveOptions();
-          }
-        });
-      });
-      $$("[name=action]").forEach(function (e) {
-        e.addEventListener('change', function () {
-          if (this.checked) {
-            options.action = this.value;
-            saveOptions();
-          }
-        });
+      document.getElementById('options').addEventListener('click', function (ev) {
+        if (ev.target.tagName === 'INPUT' && ev.target.type === 'radio') {
+          options[ev.target.name] = ev.target.value;
+          saveOptions();
+        }
       });
 
       asyncStorage.getItem('options', function (val) {
+        //jshint maxcomplexity: 15
         if (val) {
           // Default values
           options.accuracy = val.accuracy || 50;
@@ -660,6 +670,7 @@
           options.logLevel = val.logLevel || 'debug';
           options.lang     = val.lang     || 'en-US';
           options.username = val.username || '';
+          options.mapType  = val.mapType  || 'full';
         } else {
           options.accuracy = 50;
           options.action   = 'store';
@@ -668,6 +679,7 @@
           options.logLevel = 'debug';
           options.lang     = 'en-US';
           options.username = '';
+          options.mapType  = 'full';
         }
         // Init options
         onAccuracyChange();
@@ -677,11 +689,10 @@
         document.getElementById('settingsLogLevel').value = options.logLevel;
         document.getElementById('settingsLang').value = options.lang;
         document.querySelector("[name=username]").value = options.username;
-        $$("[name=geoloc]").forEach(function (e) {
-          e.checked = (e.value === options.geoloc);
-        });
-        $$("[name=action]").forEach(function (e) {
-          e.checked = (e.value === options.action);
+        ['action', 'geoloc', 'mapType'].forEach(function (type) {
+          $$("[name=" + type + "]").forEach(function (e) {
+            e.checked = (e.value === options[type]);
+          });
         });
       });
 
@@ -707,63 +718,71 @@
     }
     // Map
     map = L.map('map');
+    group = L.markerClusterGroup({
+      showCoverageOnHover: false,
+      spiderfyOnMaxZoom: true,
+      removeOutsideVisibleBounds: true,
+      disableClusteringAtZoom: 18
+    });
+    //map.addLayer(group);
+    L.Icon.Default.imagePath = 'lib/leaflet/images';
   });
 
-}());
-
-// {{ Create Mock
-function createMock() {
-  "use strict";
-  navigator.mozWifiManager = {
-    getNetworks: function () {
-      var res = {};
+  // {{ Create Mock
+  function createMock() {
+    navigator.mozWifiManager = {
+      getNetworks: function () {
+        var res = {};
+        window.setTimeout(function () {
+          var self = {
+            result: [
+              {
+                ssid: '00:00:00:00',
+                signalStrengh: 0
+              }
+            ]
+          };
+          res.onsuccess.call(self);
+        }, 500);
+        return res;
+      }
+    };
+    var info = {
+      'type': 'gsm',
+      'network': {
+        'mcc': 'mcc',
+        'mnc': 'mnc'
+      },
+      'cell': {
+        'gsmLocationAreaCode': '123',
+        'gsmCellId': '456'
+      },
+      'signalStrength': 1
+    };
+    navigator.mozMobileConnection = {
+      data: info,
+      voice: info
+    };
+    window.MozActivity = function (options) {
+      var self = this;
       window.setTimeout(function () {
-        var self = {
-          result: [
-            {
-              ssid: '00:00:00:00',
-              signalStrengh: 0
+        var res = {
+          result: {
+            coords: {
+              latitude: 48.856578 + (Math.random() / 100),
+              longitude: 2.351828 + (Math.random() / 100),
+              accuracy: 50
             }
-          ]
-        };
-        res.onsuccess.call(self);
-      }, 500);
-      return res;
-    }
-  };
-  var info = {
-    'type': 'gsm',
-    'network': {
-      'mcc': 'mcc',
-      'mnc': 'mnc'
-    },
-    'cell': {
-      'gsmLocationAreaCode': '123',
-      'gsmCellId': '456'
-    },
-    'signalStrength': 1
-  };
-  navigator.mozMobileConnection = {
-    data: info,
-    voice: info
-  };
-  window.MozActivity = function (options) {
-    var self = this;
-    window.setTimeout(function () {
-      var res = {
-        result: {
-          coords: {
-            latitude: 48.856578,
-            longitude: 2.351828,
-            accuracy: 500
           }
-        }
-      };
-      self.onsuccess.call(res);
-    }, 500);
-  };
-}
-if (typeof navigator.mozWifiManager === 'undefined' && typeof navigator.mozMobileConnection === 'undefined' && typeof window.MozActivity === 'undefined') {
-  createMock();
-}
-// }}
+        };
+        self.onsuccess.call(res);
+      }, 50);
+    };
+  }
+  if (typeof navigator.mozWifiManager === 'undefined' && typeof navigator.mozMobileConnection === 'undefined' && typeof window.MozActivity === 'undefined') {
+    createMock();
+    window.getGeoloc = getGeoloc;
+  }
+  // }}
+
+}());

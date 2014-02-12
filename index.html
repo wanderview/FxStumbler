@@ -27,20 +27,20 @@
       </section>
       <h2 data-target="options" data-l10n-id="options">Options</h2>
       <section id="options" class="hidden">
-        <p>
-          <span data-l10n-id="geolocType">Geoloc:</span>
+        <fieldset>
+          <legend data-l10n-id="geolocType">Geoloc:</legend>
           <label><input type="radio" name="geoloc" value="GPS" checked /><span data-l10n-id="geolocGps"/>GPS</span></label>
           <label><input type="radio" name="geoloc" value="Ask" /><span data-l10n-id="geolocAsk"/>Ask</span></label>
-        </p>
-        <p>
-          <span data-l10n-id="action">Action:</span>
+        </fieldset>
+        <fieldset>
+          <legend data-l10n-id="action">Action:</legend>
           <label><input type="radio" name="action" value="send" checked /><span data-l10n-id="actionSend"/>Send</span></label>
           <label><input type="radio" name="action" value="store"  /><span data-l10n-id="actionStore"/>Store</span></label>
           <label><input type="radio" name="action" value="nothing" /><span data-l10n-id="actionNone"/>Nothing</span></label>
-        </p>
-        <p>
+        </fieldset>
+        <fieldset>
           <label for="username" data-l10n-id="userName">Username: <input type="text" name="username" /></label>
-        </p>
+        </fieldset>
         <fieldset>
           <legend data-l10n-id="logLevel">Log level</legend>
           <fieldset class="inline text">
@@ -74,6 +74,11 @@
             <input id="delta" type="range" min="1" max="50" step="1" value="10" />
             <span id="deltaValue"></span>m
           </p>
+        </fieldset>
+        <fieldset>
+          <legend data-l10n-id="mapType"></legend>
+          <label><input type="radio" name="mapType" value="compact" checked /><span data-l10n-id="mapTypeCompact"/></span></label>
+          <label><input type="radio" name="mapType" value="full" /><span data-l10n-id="mapTypeFull"/></span></label>
         </fieldset>
         <h3 data-target="optionsGeoloc" data-l10n-id="geolocOptions">Geoloc</h3>
         <section id="optionsGeoloc" class="hidden">

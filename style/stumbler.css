@@ -29,3 +29,6 @@ h1, h2, h3 {
 #map {
   height: calc(100% - 70px);
 }
+[data-target] * {
+  pointer-events: none;
+}
