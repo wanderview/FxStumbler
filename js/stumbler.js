@@ -673,8 +673,8 @@
       document.getElementById('delta').addEventListener('change', onDeltaChange);
       document.getElementById('delta').addEventListener('change', saveOptions);
 
-      document.getElementById('options').addEventListener('click', function (ev) {
-        if (ev.target.tagName === 'INPUT' && ev.target.type === 'radio') {
+      document.getElementById('options').addEventListener('change', function (ev) {
+        if ((ev.target.tagName === 'INPUT' && ev.target.type === 'radio') || ev.target.name === 'username') {
           options[ev.target.name] = ev.target.value;
           saveOptions();
         }
