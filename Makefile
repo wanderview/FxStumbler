@@ -1,8 +1,8 @@
-js = lib/leaflet/leaflet.js lib/localForage/dist/localForage.js lib/webL10n/l10n.js js/stumbler.js lib/cluster/cluster.js
+js = lib/leaflet/leaflet.js lib/localForage/dist/localforage.js lib/webL10n/l10n.js js/stumbler.js lib/cluster/cluster.js
 css = style/form.css style/stumbler.css lib/leaflet/leaflet.css lib/cluster/cluster.css
 jscmd := $(shell which uglifyjs2)
 
-.PHONY: help all build zip watch debug
+.PHONY: help all build zip watch debug update
 
 default: help
 
@@ -41,6 +41,8 @@ zip:
 	rm -f stumbler.zip
 	zip -r stumbler.zip index.html js build locales manifest.webapp icons package.manifest
 
-watch:  
+watch:
 	while true; do inotifywait -e close_write,moved_to,create,modify $(js) $(css) ; make debug; done
 
+update:
+	git submodule foreach git pull origin master
