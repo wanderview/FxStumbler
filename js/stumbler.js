@@ -490,6 +490,39 @@
         }
         return false;
       });
+      document.getElementById('dumpStorage').addEventListener('click', function (event) {
+        event.preventDefault();
+        try {
+          result.textContent = '';
+          asyncStorage.getItem('items', function (value) {
+            if (value === null) {
+              value = items;
+              utils.log("Nothing stored", "info");
+            } else {
+              try {
+                var d, sdcard, file, request;
+                d = new Date();
+                d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+                sdcard  = navigator.getDeviceStorage("sdcard");
+                file    = new Blob([value], {type: "text/plain"});
+                request = sdcard.addNamed(file, "stumbler" + d.toISOString().replace(/[^0-9]/g, '').substr(0, 14) + ".json");
+                request.onsuccess = function () {
+                  var name = this.result;
+                  utils.log('[storage] File "' + name + '" successfully wrote on the sdcard storage area', 'info');
+                };
+                request.onerror = function () {
+                  console.warn('[storage] Unable to write the file: ' + this.error, 'error');
+                };
+              } catch (e) {
+                utils.log("Error retrieving stored items: " + e, "error");
+              }
+            }
+          });
+        } catch (e) {
+          utils.log("Error in displayStorage: " + e, "error");
+        }
+        return false;
+      });
       document.getElementById('displayMap').addEventListener('click', function (event) {
         event.preventDefault();
         var tile, markers = [];

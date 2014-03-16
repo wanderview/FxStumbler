@@ -9,6 +9,10 @@
     "url": "https://github.com/clochix/fxstumbler"
   },
   "permissions": {
+    "device-storage:sdcard": {
+      "access": "createonly",
+      "description": "dump data to SDCard"
+    },
     "geolocation": {
       "description": "Geo Location"
     },
