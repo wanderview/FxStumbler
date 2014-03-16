@@ -271,9 +271,11 @@
       item.lat      = pos.coords.latitude;
       item.lon      = pos.coords.longitude;
       item.accuracy = pos.coords.accuracy;
-      utils.log("[geoloc] Done: %s / %s / %s", item.accuracy, item.lat, item.lon, "info");
 
-      if (item.accuracy > options.accuracy) {
+      // Filter out erroneous values
+      if (typeof item.lat !== 'number' || isNaN(item.lat) || typeof item.lon !== 'number' || isNaN(item.lon)) {
+        utils.log("[geoloc] Wrong location", "error");
+      } else if (item.accuracy > options.accuracy) {
         utils.log("[geoloc] Not accurate : " + item.accuracy, "error");
       } else {
         getWifiInfos(onInfosCollected);
@@ -346,7 +348,7 @@
                Math.sin(dLon / 2) * Math.sin(dLon / 2),
         c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)),
         d = R * c * 1000; // Distance in m
-    return d;
+    return isNaN(d) ? 0 : d;
   }
   function onPosChange(pos) {
     try {
@@ -395,15 +397,22 @@
     }
   }
   function stopMonitoring() {
-    var conns = window.navigator.mozMobileConnection;
-    if (!Array.isArray(conns)) {
-      conns = [ conns ];
-    }
-    conns.forEach(function (conn) {
-      if (conn && conn.voice) {
-        conn.removeEventListener('voicechange', onVoiceChange);
+    try {
+      var conns = window.navigator.mozMobileConnection;
+      if (!Array.isArray(conns)) {
+        conns = [ conns ];
       }
-    });
+      conns.forEach(function (conn) {
+        if (conn && conn.voice) {
+          conn.removeEventListener('voicechange', onVoiceChange);
+        }
+      });
+      if (typeof watchId !== 'undefined') {
+        navigator.geolocation.clearWatch(watchId);
+      }
+    } catch (e) {
+      utils.log("Error in stopMonitoring: " + e, "error");
+    }
   }
   window.addEventListener("load", function () {
     //jshint maxstatements: 40
@@ -462,6 +471,16 @@
         item.cell = getCellInfos();
         getWifiInfos(search);
         return false;
+      });
+      document.getElementById('openService').addEventListener('click', function (event) {
+        navigator.geolocation.getCurrentPosition(function (pos) {
+          var url = 'https://location.services.mozilla.com/map#15/' + pos.coords.latitude + '/' + pos.coords.longitude;
+          utils.log('[service] Opening ' + url);
+          window.open(url);
+        }, function (err) {
+          utils.log('[service] Error: ' + err.code + ' : ' + err.message, "error");
+          utils.log('[service] Aborting.', "error");
+        }, getGeolocOptions());
       });
       document.getElementById('displayStorage').addEventListener('click', function (event) {
         event.preventDefault();
@@ -533,6 +552,12 @@
             if (value === null || (Array.isArray(value) && value.length < 1)) {
               window.alert("Nothing stored");
             } else {
+              // Filter erroneous values
+              utils.log('[map] before filtering ' + value.length, 'debug');
+              value = value.filter(function (v) {
+                return typeof v.lat === 'number' && !isNaN(v.lat) && typeof v.lon === 'number' && !isNaN(v.lon);
+              });
+              utils.log('[map] after filtering ' + value.length, 'debug');
               try {
                 document.getElementById('sectionMain').classList.toggle('hidden');
                 document.getElementById('sectionMap').classList.toggle('hidden');
@@ -541,19 +566,25 @@
                 tile.addTo(map);
                 value.forEach(function (v) {
                   var circle, marker;
-                  if (options.mapType === 'full') {
-                    circle = L.circle([v.lat, v.lon], v.accuracy, {
-                      color: 'red',
-                      fillColor: '#f03',
-                      fillOpacity: 0.5
-                    }).addTo(map);
-                    circle.bindPopup(v.wifi.length + " wifi networks");
-                    circle.on("click", function () {
-                      circle.openPopup();
-                    });
-                  } else {
-                    marker = L.marker(new L.LatLng(v.lat, v.lon));
-                    markers.push(marker);
+                  if (typeof v.lat === 'number' && !isNaN(v.lat) && typeof v.lon === 'number' && !isNaN(v.lon)) {
+                    try {
+                      if (options.mapType === 'full') {
+                        circle = L.circle([v.lat, v.lon], v.accuracy, {
+                          color: 'red',
+                          fillColor: '#f03',
+                          fillOpacity: 0.5
+                        }).addTo(map);
+                        circle.bindPopup(v.wifi.length + " wifi networks");
+                        circle.on("click", function () {
+                          circle.openPopup();
+                        });
+                      } else {
+                        marker = L.marker(new L.LatLng(v.lat, v.lon));
+                        markers.push(marker);
+                      }
+                    } catch (e) {
+                      utils.log('[map] ' + e.toString(), 'error');
+                    }
                   }
                 });
                 if (options.mapType === 'compact') {
@@ -589,6 +620,10 @@
               window.alert("Nothing stored");
             } else {
               try {
+                // Filter our erroneous values
+                value = value.filter(function (v) {
+                  return typeof v.lat === 'number' && !isNaN(v.lat) && typeof v.lon === 'number' && !isNaN(v.lon);
+                });
                 value.forEach(function (v) {
                   v.cell.forEach(function (c) {
                     if (c.cid) {
@@ -650,6 +685,10 @@
             } else {
               try {
                 items = JSON.parse(value);
+                // Filter our erroneous values
+                items = items.filter(function (v) {
+                  return typeof v.lat === 'number' && !isNaN(v.lat) && typeof v.lon === 'number' && !isNaN(v.lon);
+                });
                 toSend = items.length;
                 send(function () {
                   utils.log("Done sending " + toSend + " items", "info");
@@ -757,6 +796,10 @@
           } else {
             try {
               value = JSON.parse(value);
+              // Filter our erroneous values
+              value = value.filter(function (v) {
+                return typeof v.lat === 'number' && !isNaN(v.lat) && typeof v.lon === 'number' && !isNaN(v.lon);
+              });
               nbItems.innerHTML = value.length;
             } catch (e) {
               utils.log("Error retrieving stored items: " + e, "error");
