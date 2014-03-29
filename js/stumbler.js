@@ -115,13 +115,17 @@
       }
       utils.log(item, "debug");
       xhr = new XMLHttpRequest(options);
-      xhr.open("POST", "https://location.services.mozilla.com/v1/search", false);
+      xhr.open("POST", "https://location.services.mozilla.com/v1/search?key=", false);
       xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
       xhr.send(JSON.stringify(item));
       if (xhr.status === 200) {
         res = JSON.parse(xhr.responseText);
         if (res.status === "ok") {
           utils.log("[Search] OK\nlat: %s\nlon: %s\naccuracy: %s", res.lat, res.lon, res.accuracy, "info");
+          document.getElementById('sectionMain').classList.toggle('hidden');
+          document.getElementById('sectionMap').classList.toggle('hidden');
+          map.setView([res.lat, res.lon], 14);
+          map._onResize();
         } else {
           utils.log("[Search] " + res.status, "error");
         }
@@ -415,8 +419,8 @@
     }
   }
   window.addEventListener("load", function () {
-    //jshint maxstatements: 40
-    var onAccuracyChange, onDeltaChange;
+    //jshint maxstatements: 41
+    var onAccuracyChange, onDeltaChange, tile;
     _ = document.webL10n.get;
     function onSliderChange(option, target) {
       var fct = function (event) {
@@ -544,7 +548,7 @@
       });
       document.getElementById('displayMap').addEventListener('click', function (event) {
         event.preventDefault();
-        var tile, markers = [];
+        var markers = [];
         try {
           result.textContent = '';
           asyncStorage.getItem('items', function (value) {
@@ -562,8 +566,6 @@
                 document.getElementById('sectionMain').classList.toggle('hidden');
                 document.getElementById('sectionMap').classList.toggle('hidden');
                 map.setView([value[value.length - 1].lat, value[value.length - 1].lon], 14);
-                tile = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>', maxZoom: 18});
-                tile.addTo(map);
                 value.forEach(function (v) {
                   var circle, marker;
                   if (typeof v.lat === 'number' && !isNaN(v.lat) && typeof v.lon === 'number' && !isNaN(v.lon)) {
@@ -810,7 +812,6 @@
         utils.log("Error in displayStorage: " + e, "error");
       }
     } catch (e) {
-      console.log(e);
       utils.log(e.toString(), "error");
     }
     // Map
@@ -821,9 +822,14 @@
       removeOutsideVisibleBounds: true,
       disableClusteringAtZoom: 18
     });
+    tile = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>', maxZoom: 18});
+    tile.addTo(map);
     //map.addLayer(group);
     L.Icon.Default.imagePath = 'lib/leaflet/images';
-  });
+  }, false);
+  window.addEventListener("error", function (e) {
+    utils.log(e.toString(), "error");
+  }, false);
 
   // {{ Create Mock
   function createMock() {
