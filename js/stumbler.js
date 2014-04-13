@@ -63,6 +63,33 @@
       }
     }
   };
+  /**
+   * Filter out erroneous values
+   * @param values {Array}
+   * @return Array
+   */
+  function cleanValues(values) {
+    var init = values.length;
+    // wrong location
+    values = values.filter(function (v) {
+      return typeof v.lat === 'number' && !isNaN(v.lat) && typeof v.lon === 'number' && !isNaN(v.lon);
+    });
+    // no data
+    values = values.filter(function (v) {
+      var nb = 0;
+      if (Array.isArray(v.cell)) {
+        nb += v.cell.length;
+      }
+      if (Array.isArray(v.wifi)) {
+        nb += v.wifi.length;
+      }
+      return nb > 0;
+    });
+    if (values.length !== init) {
+      utils.log("%s wrong items filtered", init - values.length, "warning");
+    }
+    return values;
+  }
   // send {{
   function send(cb) {
     //jshint maxstatements: 30
@@ -557,11 +584,7 @@
               window.alert("Nothing stored");
             } else {
               // Filter erroneous values
-              utils.log('[map] before filtering ' + value.length, 'debug');
-              value = value.filter(function (v) {
-                return typeof v.lat === 'number' && !isNaN(v.lat) && typeof v.lon === 'number' && !isNaN(v.lon);
-              });
-              utils.log('[map] after filtering ' + value.length, 'debug');
+              value = cleanValues(value);
               try {
                 document.getElementById('sectionMain').classList.toggle('hidden');
                 document.getElementById('sectionMap').classList.toggle('hidden');
@@ -623,9 +646,7 @@
             } else {
               try {
                 // Filter our erroneous values
-                value = value.filter(function (v) {
-                  return typeof v.lat === 'number' && !isNaN(v.lat) && typeof v.lon === 'number' && !isNaN(v.lon);
-                });
+                value = cleanValues(value);
                 value.forEach(function (v) {
                   v.cell.forEach(function (c) {
                     if (c.cid) {
@@ -688,9 +709,7 @@
               try {
                 items = JSON.parse(value);
                 // Filter our erroneous values
-                items = items.filter(function (v) {
-                  return typeof v.lat === 'number' && !isNaN(v.lat) && typeof v.lon === 'number' && !isNaN(v.lon);
-                });
+                items = cleanValues(items);
                 toSend = items.length;
                 send(function () {
                   utils.log("Done sending " + toSend + " items", "info");
