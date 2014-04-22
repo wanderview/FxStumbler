@@ -1,4 +1,4 @@
-js = lib/leaflet/leaflet.js lib/localForage/dist/localforage.js lib/webL10n/l10n.js js/stumbler.js lib/cluster/cluster.js
+js = lib/leaflet/leaflet.js lib/localforage.js lib/webL10n/l10n.js js/stumbler.js lib/cluster/cluster.js
 css = style/form.css style/stumbler.css lib/leaflet/leaflet.css lib/cluster/cluster.css
 jscmd := $(shell which uglifyjs2)
 
@@ -13,7 +13,7 @@ help:
 all: build zip
 
 build: 
-	test -s lib/localForage/.git -a -s lib/webL10n/.git || ( git submodule update --init --recursive && git submodule foreach git pull origin master )
+	test -s lib/webL10n/.git || ( git submodule update --init --recursive && git submodule foreach git pull origin master )
 	test -d build || mkdir build
 	cat $(css) > build/style.css
 ifeq ($(jscmd),)
@@ -25,7 +25,7 @@ else
 endif
 
 debug: 
-	test -s lib/localForage/.git -a -s lib/webL10n/.git || ( git submodule update --init --recursive && git submodule foreach git pull origin master )
+	test -s lib/webL10n/.git || ( git submodule update --init --recursive && git submodule foreach git pull origin master )
 	test -d build || mkdir build
 	cat $(css) > build/style.css
 ifeq ($(jscmd),)
