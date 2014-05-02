@@ -446,9 +446,49 @@
     }
   }
   window.addEventListener("load", function () {
-    //jshint maxstatements: 41
-    var onAccuracyChange, onDeltaChange, tile;
+    //jshint maxstatements: 50
+    var onAccuracyChange, onDeltaChange, tile,
+        _initialized = false;
+
     _ = document.webL10n.get;
+
+    function initOptions(val) {
+      //jshint maxcomplexity: 15
+      if (val) {
+        // Default values
+        options.accuracy = val.accuracy || 50;
+        options.action   = val.action   || 'store';
+        options.delta    = val.delta    || 10;
+        options.geoloc   = val.geoloc   || 'GPS';
+        options.logLevel = val.logLevel || 'debug';
+        options.lang     = val.lang     || 'en-US';
+        options.username = val.username || '';
+        options.mapType  = val.mapType  || 'full';
+      } else {
+        options.accuracy = 50;
+        options.action   = 'store';
+        options.delta    = 10;
+        options.geoloc   = 'GPS';
+        options.logLevel = 'debug';
+        options.lang     = 'en-US';
+        options.username = '';
+        options.mapType  = 'full';
+      }
+      // Init options
+      onAccuracyChange();
+      onDeltaChange();
+      utils.logLevel = options.logLevel;
+      document.webL10n.setLanguage(options.lang);
+      document.getElementById('settingsLogLevel').value = options.logLevel;
+      document.getElementById('settingsLang').value = options.lang;
+      document.querySelector("[name=username]").value = options.username;
+      ['action', 'geoloc', 'mapType'].forEach(function (type) {
+        $$("[name=" + type + "]").forEach(function (e) {
+          e.checked = (e.value === options[type]);
+        });
+      });
+      _initialized = true;
+    }
     function onSliderChange(option, target) {
       var fct = function (event) {
         if (event) {
@@ -506,7 +546,7 @@
       document.getElementById('openService').addEventListener('click', function (event) {
         navigator.geolocation.getCurrentPosition(function (pos) {
           var url = 'https://location.services.mozilla.com/map#15/' + pos.coords.latitude + '/' + pos.coords.longitude;
-          utils.log('[service] Opening ' + url);
+          utils.log('[service] Opening ' + url, "info");
           window.open(url);
         }, function (err) {
           utils.log('[service] Error: ' + err.code + ' : ' + err.message, "error");
@@ -561,7 +601,7 @@
                   utils.log('[storage] File "' + name + '" successfully wrote on the sdcard storage area', 'info');
                 };
                 request.onerror = function () {
-                  console.warn('[storage] Unable to write the file: ' + this.error, 'error');
+                  utils.log('[storage] Unable to write the file: ' + this.error, 'error');
                 };
               } catch (e) {
                 utils.log("Error retrieving stored items: " + e, "error");
@@ -773,42 +813,14 @@
         }
       });
 
-      asyncStorage.getItem('options', function (val) {
-        //jshint maxcomplexity: 15
-        if (val) {
-          // Default values
-          options.accuracy = val.accuracy || 50;
-          options.action   = val.action   || 'store';
-          options.delta    = val.delta    || 10;
-          options.geoloc   = val.geoloc   || 'GPS';
-          options.logLevel = val.logLevel || 'debug';
-          options.lang     = val.lang     || 'en-US';
-          options.username = val.username || '';
-          options.mapType  = val.mapType  || 'full';
-        } else {
-          options.accuracy = 50;
-          options.action   = 'store';
-          options.delta    = 10;
-          options.geoloc   = 'GPS';
-          options.logLevel = 'debug';
-          options.lang     = 'en-US';
-          options.username = '';
-          options.mapType  = 'full';
+      asyncStorage.getItem('options', initOptions);
+
+      setTimeout(function () {
+        if (!_initialized) {
+          utils.log("Unable to load options", "error");
+          initOptions();
         }
-        // Init options
-        onAccuracyChange();
-        onDeltaChange();
-        utils.logLevel = options.logLevel;
-        document.webL10n.setLanguage(options.lang);
-        document.getElementById('settingsLogLevel').value = options.logLevel;
-        document.getElementById('settingsLang').value = options.lang;
-        document.querySelector("[name=username]").value = options.username;
-        ['action', 'geoloc', 'mapType'].forEach(function (type) {
-          $$("[name=" + type + "]").forEach(function (e) {
-            e.checked = (e.value === options[type]);
-          });
-        });
-      });
+      }, 10000);
 
       try {
         asyncStorage.getItem('items', function (value) {
