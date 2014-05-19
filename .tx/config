@@ -1,0 +1,11 @@
+[main]
+host = https://www.transifex.com
+mode = developer
+
+[fxstumbler.localesenini]
+file_filter = locales/locales.<lang>.ini
+minimum_perc = 30
+source_file = locales/locales.en.ini
+source_lang = en
+type = MOZILLAPROPERTIES
+
