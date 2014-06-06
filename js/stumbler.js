@@ -14,7 +14,8 @@
       utils,
       map,
       group,
-      _;
+      _,
+      lockWifi;
   options = {
     geoloc: 'GPS',
     action: 'send',
@@ -423,6 +424,7 @@
         }
       });
       watchId = navigator.geolocation.watchPosition(onPosChange, onGeolocError, getGeolocOptions());
+      lockWifi = window.navigator.requestWakeLock('wifi');
     } catch (e) {
       utils.log("Error in startMonitoring: " + e, "error");
     }
@@ -440,6 +442,10 @@
       });
       if (typeof watchId !== 'undefined') {
         navigator.geolocation.clearWatch(watchId);
+      }
+      if (typeof lockWifi !== "undefined" && lockWifi !== null) {
+        lockWifi.unlock();
+        lockWifi = null;
       }
     } catch (e) {
       utils.log("Error in stopMonitoring: " + e, "error");
@@ -849,6 +855,15 @@
   window.addEventListener("error", function (e) {
     utils.log(e.toString(), "error");
   }, false);
+  window.addEventListener("unload", function () {
+    if (typeof watchId !== 'undefined') {
+      navigator.geolocation.clearWatch(watchId);
+    }
+    if (typeof lockWifi !== "undefined" && lockWifi !== null) {
+      lockWifi.unlock();
+      lockWifi = null;
+    }
+  });
 
   // {{ Create Mock
   function createMock() {
