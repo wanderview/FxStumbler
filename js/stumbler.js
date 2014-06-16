@@ -63,6 +63,32 @@
       }
     }
   };
+  function forEachMobileConnection(cb) {
+    if (typeof cb !== 'function') {
+      return;
+    }
+
+    var conns = window.navigator.mozMobileConnections;
+    if (!conns) {
+      conns = window.navigator.mozMobileConnection;
+      if (conns && !Array.isArray(conns)) {
+        conns = [conns];
+      }
+    }
+
+    if (!conns) {
+      utils.log("[cell] Unable to get mobile connection", "debug");
+      return;
+    }
+
+    for (var i = 0, n = conns.length; i < n; ++i) {
+      try {
+        cb(conns[i]);
+      } catch (e) {
+        utils.log("[cell] Error : " + e, "error");
+      }
+    }
+  }
   /**
    * Filter out erroneous values
    * @param values {Array}
@@ -203,7 +229,7 @@
   // Cell {{
   function getCellInfos() {
     //jshint maxstatements: 25
-    var conns, data, voice, cells = [], cell = {}, type, tr;
+    var data, voice, cells = [], cell = {}, type, tr;
     utils.log("[cell] Getting cell infos", "debug");
     // Convert radio type
     tr = {
@@ -211,39 +237,36 @@
       'cdma': ["cdma", "evdo", "ehrpd"]
     };
 
-    conns = window.navigator.mozMobileConnection;
-    if (typeof conns !== 'undefined') {
-      if (!Array.isArray(conns)) {
-        conns = [ conns ];
-      }
-      conns.forEach(function (conn) {
-        try {
-          data  = conn.data;
-          voice = conn.voice;
-          type  = voice.type;
-          Object.keys(tr).forEach(function (radio) {
-            if (tr[radio].indexOf(type) !== -1) {
-              type = radio;
-            }
-          });
-          cell.radio  = type;
-          cell.mcc    = voice.network.mcc;
-          cell.mnc    = voice.network.mnc;
-          cell.lac    = voice.cell.gsmLocationAreaCode;
-          cell.cid    = voice.cell.gsmCellId;
-          cell.signal = voice.signalStrength;
-          cell.asu    = undefined;
-          cell.ta     = undefined;
-          cell.psc    = undefined;
-          cells.push(cell);
-          utils.log("[cell] Done", "debug");
-        } catch (e) {
-          utils.log("[cell] Error : " + e, "error");
+    forEachMobileConnection(function(conn) {
+      data  = conn.data;
+      voice = conn.voice;
+      type  = voice.type;
+      Object.keys(tr).forEach(function (radio) {
+        if (tr[radio].indexOf(type) !== -1) {
+          type = radio;
         }
       });
-    } else {
-      utils.log("[cell] Unable to get mobile connection", "debug");
-    }
+      cell.radio  = type;
+      if (!voice.network) {
+        utils.log("[cell] Skipping connection with no voice network", "debug");
+        return;
+      }
+      cell.mcc    = voice.network.mcc;
+      cell.mnc    = voice.network.mnc;
+      if (!voice.cell) {
+        utils.log("[cell] Skipping connection with no cell data", "debug");
+        return;
+      }
+      cell.lac    = voice.cell.gsmLocationAreaCode;
+      cell.cid    = voice.cell.gsmCellId;
+      cell.signal = voice.signalStrength;
+      cell.asu    = undefined;
+      cell.ta     = undefined;
+      cell.psc    = undefined;
+      cells.push(cell);
+      utils.log("[cell] Done", "debug");
+    });
+
     return cells;
   }
   // }}
@@ -351,11 +374,7 @@
   }
   function onVoiceChange() {
     try {
-      var conns = window.navigator.mozMobileConnection;
-      if (!Array.isArray(conns)) {
-        conns = [ conns ];
-      }
-      conns.forEach(function (conn) {
+      forEachMobileConnection(function (conn) {
         if (conn && conn.voice && conn.voice.cell) {
           //@FIXME we can't rely on currCell if there is more than one conn
           if (curCell !== conn.voice.cell.gsmCellId) {
@@ -413,11 +432,7 @@
         window.alert("Monitoring is only available when using GPS");
         return false;
       }
-      var conns = window.navigator.mozMobileConnection;
-      if (!Array.isArray(conns)) {
-        conns = [ conns ];
-      }
-      conns.forEach(function (conn) {
+      forEachMobileConnection(function (conn) {
         if (conn && conn.voice) {
           conn.addEventListener('voicechange', onVoiceChange);
         }
@@ -429,11 +444,7 @@
   }
   function stopMonitoring() {
     try {
-      var conns = window.navigator.mozMobileConnection;
-      if (!Array.isArray(conns)) {
-        conns = [ conns ];
-      }
-      conns.forEach(function (conn) {
+      forEachMobileConnection(function (conn) {
         if (conn && conn.voice) {
           conn.removeEventListener('voicechange', onVoiceChange);
         }
