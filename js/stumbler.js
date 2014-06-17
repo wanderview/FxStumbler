@@ -267,6 +267,9 @@
       utils.log("[cell] Done", "debug");
     });
 
+    utils.log("[cell] found " + cells.length +
+              " connection" + (cell.length > 1 ? "s" : ""), "info");
+
     return cells;
   }
   // }}
