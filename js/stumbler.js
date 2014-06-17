@@ -229,7 +229,7 @@
   // Cell {{
   function getCellInfos() {
     //jshint maxstatements: 25
-    var data, voice, cells = [], cell = {}, type, tr;
+    var data, voice, cells = [], type, tr;
     utils.log("[cell] Getting cell infos", "debug");
     // Convert radio type
     tr = {
@@ -246,6 +246,7 @@
           type = radio;
         }
       });
+      var cell = {}
       cell.radio  = type;
       if (!voice.network) {
         utils.log("[cell] Skipping connection with no voice network", "debug");
