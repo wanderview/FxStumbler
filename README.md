@@ -10,7 +10,7 @@ You can either just download and extract the archive, or clone the repository :
 
     mkdir FxStumbler
     cd FxStumbler
-    curl -O https://github.com/clochix/FxStumbler/raw/master/stumbler.zip
+    curl -O https://raw.githubusercontent.com/clochix/FxStumbler/master/stumbler.zip
     unzip stumbler.zip
 
 Or
