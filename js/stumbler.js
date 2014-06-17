@@ -233,7 +233,8 @@
     utils.log("[cell] Getting cell infos", "debug");
     // Convert radio type
     tr = {
-      'gsm': ["gsm", "edge", "gprs", "hspa", "hsdpa", "hspa+", "hsupa"],
+      'gsm': ["gsm", "edge", "gprs"],
+      'umts': ["hspa", "hsdpa", "hspa+", "hsupa"],
       'cdma': ["cdma", "evdo", "ehrpd"]
     };
 
