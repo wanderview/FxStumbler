@@ -9,7 +9,7 @@
       item,
       nbItems,
       curPos,
-      curCell,
+      curCells = [],
       options,
       utils,
       map,
@@ -379,16 +379,31 @@
   }
   function onVoiceChange() {
     try {
+      var newCells = [];
       forEachMobileConnection(function (conn) {
         if (conn && conn.voice && conn.voice.cell) {
-          //@FIXME we can't rely on currCell if there is more than one conn
-          if (curCell !== conn.voice.cell.gsmCellId) {
-            curCell = conn.voice.cell.gsmCellId;
-            utils.log("[cell] New cell: " + curCell, "debug");
-            getGeoloc();
-          }
+          newCells.push(conn.voice.cell.gsmCellId);
         }
       });
+      var needUpdate = false;
+      // Did we lose an existing cell?
+      for (var i = 0, n = curCells.length; !needUpdate && i < n; ++i) {
+        if (newCells.indexOf(curCells[i]) === -1) {
+          needUpdate = true;
+        }
+      }
+      // Did we get a new cell?
+      for (var i = 0, n = newCells.length; !needUpdate && i < n; ++i) {
+        if (curCells.indexOf(newCells[i]) === -1) {
+          needUpdate = true;
+        }
+      }
+      // If anything changed, save the new cells and get a new geoloc
+      if (needUpdate) {
+        utils.log("[cell] New cells: " + newCells, "debug");
+        curCells = newCells;
+        getGeoloc();
+      }
     } catch (e) {
       utils.log("Error in onVoiceChange: " + e, "error");
     }
