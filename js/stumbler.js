@@ -253,15 +253,15 @@
         utils.log("[cell] Skipping connection with no voice network", "debug");
         return;
       }
-      cell.mcc    = voice.network.mcc;
-      cell.mnc    = voice.network.mnc;
+      cell.mcc    = parseInt(voice.network.mcc, 10);
+      cell.mnc    = parseInt(voice.network.mnc, 10);
       if (!voice.cell) {
         utils.log("[cell] Skipping connection with no cell data", "debug");
         return;
       }
-      cell.lac    = voice.cell.gsmLocationAreaCode;
-      cell.cid    = voice.cell.gsmCellId;
-      cell.signal = voice.signalStrength;
+      cell.lac    = parseInt(voice.cell.gsmLocationAreaCode, 10);
+      cell.cid    = parseInt(voice.cell.gsmCellId, 10);
+      cell.signal = parseInt(voice.signalStrength, 10);
       cell.asu    = undefined;
       cell.ta     = undefined;
       cell.psc    = undefined;
@@ -304,7 +304,7 @@
               key: network.bssid,
               channel: undefined,
               frequency: undefined,
-              signal: network.signalStrength
+              signal: parseInt(network.signalStrength, 10)
             };
             networks.push(net);
           }
