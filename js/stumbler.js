@@ -14,7 +14,8 @@
       utils,
       map,
       group,
-      _;
+      _,
+      wifiLock;
   options = {
     geoloc: 'GPS',
     action: 'send',
@@ -458,6 +459,10 @@
         }
       });
       watchId = navigator.geolocation.watchPosition(onPosChange, onGeolocError, getGeolocOptions());
+      if (!wifiLock) {
+        wifiLock = navigator.requestWakeLock('wifi');
+        utils.log("Requesting wifi wake-lock", "info");
+      }
     } catch (e) {
       utils.log("Error in startMonitoring: " + e, "error");
     }
@@ -471,6 +476,11 @@
       });
       if (typeof watchId !== 'undefined') {
         navigator.geolocation.clearWatch(watchId);
+      }
+      if (wifiLock) {
+        wifiLock.unlock();
+        wifiLock = null;
+        utils.log("Released wifi wake-lock", "info");
       }
     } catch (e) {
       utils.log("Error in stopMonitoring: " + e, "error");
