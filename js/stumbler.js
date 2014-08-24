@@ -253,6 +253,10 @@
         utils.log("[cell] Skipping connection with no voice network", "debug");
         return;
       }
+      if (typeof cell.radio === 'undefined' || cell.radio === 'unknown') {
+        utils.log("[cell] Skipping connection with unknown network type", "debug");
+        return;
+      }
       cell.mcc    = parseInt(voice.network.mcc, 10);
       cell.mnc    = parseInt(voice.network.mnc, 10);
       if (!voice.cell) {
