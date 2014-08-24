@@ -68,7 +68,8 @@
       return;
     }
 
-    var conns = window.navigator.mozMobileConnections;
+    var i, n, conns;
+    conns = window.navigator.mozMobileConnections;
     if (!conns) {
       conns = window.navigator.mozMobileConnection;
       if (conns && !Array.isArray(conns)) {
@@ -81,7 +82,7 @@
       return;
     }
 
-    for (var i = 0, n = conns.length; i < n; ++i) {
+    for (i = 0, n = conns.length; i < n; ++i) {
       try {
         cb(conns[i]);
       } catch (e) {
@@ -238,7 +239,7 @@
       'cdma': ["cdma", "evdo", "ehrpd"]
     };
 
-    forEachMobileConnection(function(conn) {
+    forEachMobileConnection(function (conn) {
       data  = conn.data;
       voice = conn.voice;
       type  = voice.type;
@@ -247,7 +248,7 @@
           type = radio;
         }
       });
-      var cell = {}
+      var cell = {};
       cell.radio  = type;
       if (!voice.network) {
         utils.log("[cell] Skipping connection with no voice network", "debug");
@@ -383,21 +384,22 @@
   }
   function onVoiceChange() {
     try {
-      var newCells = [];
+      var newCells   = [],
+          needUpdate = false,
+          i, n;
       forEachMobileConnection(function (conn) {
         if (conn && conn.voice && conn.voice.cell) {
           newCells.push(conn.voice.cell.gsmCellId);
         }
       });
-      var needUpdate = false;
       // Did we lose an existing cell?
-      for (var i = 0, n = curCells.length; !needUpdate && i < n; ++i) {
+      for (i = 0, n = curCells.length; !needUpdate && i < n; ++i) {
         if (newCells.indexOf(curCells[i]) === -1) {
           needUpdate = true;
         }
       }
       // Did we get a new cell?
-      for (var i = 0, n = newCells.length; !needUpdate && i < n; ++i) {
+      for (i = 0, n = newCells.length; !needUpdate && i < n; ++i) {
         if (curCells.indexOf(newCells[i]) === -1) {
           needUpdate = true;
         }
